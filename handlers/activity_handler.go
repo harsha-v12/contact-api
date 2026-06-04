@@ -22,23 +22,7 @@ var validActivityTypes = map[string]bool{
 	"contact_created":  true,
 }
 
-// LogActivityHandler handles POST /api/v1/contacts/:id/activities
-//
-// Request Body:
-//
-//	{
-//	  "activity_type": "email_sent",        ← required
-//	  "details":       "Welcome email sent" ← optional
-//	}
-//
-// Supported activity_type values:
-//   - email_sent
-//   - whatsapp_sent
-//   - meeting_attended
-//   - video_watched
-//   - event_attended
-//   - note_added
-//   - contact_created
+
 func LogActivityHandler(c *gin.Context) {
 	// Parse contact ID
 	contactIDStr := c.Param("id")
