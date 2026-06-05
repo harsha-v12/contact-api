@@ -2,7 +2,7 @@ package models
 
 // ContactListFilter holds all query parameters for listing, searching, and filtering contacts
 type ContactListFilter struct {
-	// Pagination
+	// Pagination:
 	Page  int `form:"page"`
 	Limit int `form:"limit"`
 
@@ -17,7 +17,7 @@ type ContactListFilter struct {
 	Tags         []string `form:"tags"`          // filter contacts that have ANY of these tags
 	Country      string   `form:"country"`
 	State        string   `form:"state"`
-	City         string   `form:"city"`
+	City         string   `form:"city"`          
 	CreatedFrom  string   `form:"created_from"`  // YYYY-MM-DD
 	CreatedTo    string   `form:"created_to"`    // YYYY-MM-DD
 	ActivityFrom string   `form:"activity_from"` // last_activity_at range start

@@ -3,20 +3,39 @@ package routes
 import (
 	"contact-management/handlers"
 	"contact-management/middleware"
+	"net/http"
 
-	"github.com/gin-gonic/gin"
+	"github.com/labstack/echo/v4"
 )
 
-// RegisterRoutes sets up the routing configuration for the API
-func RegisterRoutes(r *gin.Engine){
-	v1 := r.Group("/api/v1")
-	// for authentiction purpose we can use API key authentication middleware
-	v1.Use(middleware.APIkeyAuth())
+// RegisterRoutes sets up all the API routes
+func RegisterRoutes(e *echo.Echo) {
+	// Root route
+	e.GET("/", func(c echo.Context) error {
+		return c.JSON(http.StatusOK, map[string]string{
+			"service": "contact-api",
+			"status":  "running",
+			"version": "1.0.0",
+		})
+	})
+
+	// Health check
+	e.GET("/health", func(c echo.Context) error {
+		return c.JSON(http.StatusOK, map[string]string{
+			"status": "healthy",
+		})
+	})
+
+	// API v1 Group
+	v1 := e.Group("/api/v1")
 	{
+		// Apply Auth Middleware to all v1 routes
+		v1.Use(middleware.APIKeyAuthMiddleware())
+
+		// Contacts Group
 		contacts := v1.Group("/contacts")
 		{
-			// Core contact CRUD endpoints
-			contacts.GET("", handlers.ListContactsHandler)              
+			contacts.GET("", handlers.ListContactsHandler)
 			contacts.POST("", handlers.CreateContactHandler)
 			contacts.GET("/:id", handlers.GetContactProfileHandler)
 			contacts.PUT("/:id", handlers.UpdateContactHandler)
@@ -25,8 +44,8 @@ func RegisterRoutes(r *gin.Engine){
 
 			// Tags endpoint
 			contacts.PATCH("/:id/tags", handlers.UpdateTagsHandler)
-
-			// Notes endpoints
+			
+			// Note endpoints
 			contacts.GET("/:id/notes", handlers.GetNotesHandler)
 			contacts.POST("/:id/notes", handlers.AddNoteHandler)
 			contacts.PUT("/:id/notes/:note_id", handlers.UpdateNoteHandler)

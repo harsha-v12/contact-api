@@ -7,8 +7,8 @@ import (
 	"contact-management/models"
 	"contact-management/repository"
 
-	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
 )
 
 // validActivityTypes defines all allowed activity types
@@ -23,13 +23,12 @@ var validActivityTypes = map[string]bool{
 }
 
 
-func LogActivityHandler(c *gin.Context) {
+func LogActivityHandler(c echo.Context) error {
 	// Parse contact ID
 	contactIDStr := c.Param("id")
 	contactID, err := uuid.Parse(contactIDStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid contact UUID"})
-		return
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{"error": "invalid contact UUID"})
 	}
 
 	// Parse request body
@@ -37,14 +36,13 @@ func LogActivityHandler(c *gin.Context) {
 		ActivityType string `json:"activity_type" binding:"required"`
 		Details      string `json:"details"`
 	}
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "activity_type is required"})
-		return
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{"error": "activity_type is required"})
 	}
 
 	// Validate activity type
 	if !validActivityTypes[req.ActivityType] {
-		c.JSON(http.StatusBadRequest, gin.H{
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{
 			"error": "invalid activity_type",
 			"allowed": []string{
 				"email_sent",
@@ -56,16 +54,14 @@ func LogActivityHandler(c *gin.Context) {
 				"contact_created",
 			},
 		})
-		return
 	}
 
-	ctx := c.Request.Context()
+	ctx := c.Request().Context()
 
 	// Verify contact exists and is not deleted
 	contact, err := repository.GetContactByID(ctx, contactID)
 	if err != nil || contact.IsDeleted == 1 {
-		c.JSON(http.StatusNotFound, gin.H{"error": "contact not found"})
-		return
+		return c.JSON(http.StatusNotFound, map[string]interface{}{"error": "contact not found"})
 	}
 
 	now := time.Now()
@@ -80,8 +76,7 @@ func LogActivityHandler(c *gin.Context) {
 	}
 
 	if err := repository.AddContactActivity(ctx, activity); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to log activity: " + err.Error()})
-		return
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": "failed to log activity: " + err.Error()})
 	}
 
 	// Update contact's last_activity_at
@@ -89,7 +84,7 @@ func LogActivityHandler(c *gin.Context) {
 	contact.Version = now
 	_ = repository.UpdateContact(ctx, contact)
 
-	c.JSON(http.StatusCreated, gin.H{
+	return c.JSON(http.StatusCreated, map[string]interface{}{
 		"message":  "activity logged successfully",
 		"activity": activity,
 	})
@@ -97,38 +92,34 @@ func LogActivityHandler(c *gin.Context) {
 
 // GetActivitiesHandler handles GET /api/v1/contacts/:id/activities
 // Returns the full chronological activity timeline for a contact
-func GetActivitiesHandler(c *gin.Context) {
+func GetActivitiesHandler(c echo.Context) error {
 	contactIDStr := c.Param("id")
 	contactID, err := uuid.Parse(contactIDStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid contact UUID"})
-		return
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{"error": "invalid contact UUID"})
 	}
 
-	ctx := c.Request.Context()
+	ctx := c.Request().Context()
 
 	// Verify contact exists
 	contact, err := repository.GetContactByID(ctx, contactID)
 	if err != nil || contact.IsDeleted == 1 {
-		c.JSON(http.StatusNotFound, gin.H{"error": "contact not found"})
-		return
+		return c.JSON(http.StatusNotFound, map[string]interface{}{"error": "contact not found"})
 	}
 
 	// Get timeline
 	activities, err := repository.GetContactActivities(ctx, contactID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
 	}
 
 	// Get summary counts
 	summary, err := repository.GetContactActivitySummary(ctx, contactID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
 	}
 
-	c.JSON(http.StatusOK, gin.H{
+	return c.JSON(http.StatusOK, map[string]interface{}{
 		"contact_id":       contactID,
 		"activity_summary": summary,
 		"activities":       activities,

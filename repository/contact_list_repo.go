@@ -21,7 +21,7 @@ var allowedSortFields = map[string]string{
 
 // ListContacts returns a paginated, filtered, searchable list of active contacts
 func ListContacts(ctx context.Context, f models.ContactListFilter) ([]models.ContactListItem, int, error) {
-	// ── Defaults ──────────────────────────────────────────────────────────────
+	
 	if f.Page < 1 {
 		f.Page = 1
 	}
@@ -116,7 +116,7 @@ func ListContacts(ctx context.Context, f models.ContactListFilter) ([]models.Con
 		return nil, 0, fmt.Errorf("list contacts count query failed: %w", err)
 	}
 
-	// ── Fetch paginated rows ──────────────────────────────────────────────────
+	
 	offset := (f.Page - 1) * f.Limit
 
 	dataQuery := fmt.Sprintf(`

@@ -4,6 +4,7 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -13,21 +14,19 @@ import (
 	"contact-management/models"
 	"contact-management/services"
 
-	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
 	"github.com/segmentio/kafka-go"
 )
 
-func UploadImportFileHandler(c *gin.Context) {
+func UploadImportFileHandler(c echo.Context) error {
 	file, err := c.FormFile("file")
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "file is required"})
-		return
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{"error": "file is required"})
 	}
 
 	if filepath.Ext(file.Filename) != ".csv" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "only .csv files are supported"})
-		return
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{"error": "only .csv files are supported"})
 	}
 
 	maxSizeMB := 50
@@ -38,8 +37,7 @@ func UploadImportFileHandler(c *gin.Context) {
 	}
 
 	if file.Size > int64(maxSizeMB*1024*1024) {
-		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("file size exceeds maximum limit of %d MB", maxSizeMB)})
-		return
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{"error": fmt.Sprintf("file size exceeds maximum limit of %d MB", maxSizeMB)})
 	}
 
 	importID := uuid.New().String()
@@ -47,23 +45,34 @@ func UploadImportFileHandler(c *gin.Context) {
 	os.MkdirAll(uploadDir, os.ModePerm)
 	
 	filePath := filepath.Join(uploadDir, fmt.Sprintf("%s.csv", importID))
-	if err := c.SaveUploadedFile(file, filePath); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to save file"})
-		return
+	
+	// Save the file
+	src, err := file.Open()
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": "failed to open uploaded file"})
+	}
+	defer src.Close()
+
+	dst, err := os.Create(filePath)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": "failed to create target file"})
+	}
+	defer dst.Close()
+
+	if _, err = io.Copy(dst, src); err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": "failed to save file"})
 	}
 
 	totalRecords, err := countCSVRows(filePath)
 	if err != nil || totalRecords == 0 {
 		os.Remove(filePath)
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid or empty CSV file"})
-		return
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{"error": "invalid or empty CSV file"})
 	}
 
-	ctx := c.Request.Context()
+	ctx := c.Request().Context()
 	err = services.CreateImportJob(ctx, importID, totalRecords)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to initialize import tracking"})
-		return
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": "failed to initialize import tracking"})
 	}
 
 	msg := models.CSVImportMessage{
@@ -80,11 +89,10 @@ func UploadImportFileHandler(c *gin.Context) {
 
 	if err != nil {
 		services.UpdateImportProgress(ctx, importID, 0, 0, 0, "failed")
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to queue import job"})
-		return
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": "failed to queue import job"})
 	}
 
-	c.JSON(http.StatusAccepted, gin.H{
+	return c.JSON(http.StatusAccepted, map[string]interface{}{
 		"import_id": importID,
 		"message":   fmt.Sprintf("Import job created. %d records will be processed in the background.", totalRecords),
 		"status":    "pending",
@@ -111,13 +119,12 @@ func countCSVRows(filePath string) (int, error) {
 	return len(records) - 1, nil
 }
 
-func GetImportStatusHandler(c *gin.Context) {
+func GetImportStatusHandler(c echo.Context) error {
 	importID := c.Param("import_id")
 	
-	job, err := services.GetImportJob(c.Request.Context(), importID)
+	job, err := services.GetImportJob(c.Request().Context(), importID)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "import job not found"})
-		return
+		return c.JSON(http.StatusNotFound, map[string]interface{}{"error": "import job not found"})
 	}
 
 	var percentage float64
@@ -125,7 +132,7 @@ func GetImportStatusHandler(c *gin.Context) {
 		percentage = float64(job.ProcessedRecords) / float64(job.TotalRecords) * 100
 	}
 
-	c.JSON(http.StatusOK, gin.H{
+	return c.JSON(http.StatusOK, map[string]interface{}{
 		"import_id":             job.ImportID,
 		"status":                job.Status,
 		"total_records":         job.TotalRecords,

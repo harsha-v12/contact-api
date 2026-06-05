@@ -86,7 +86,7 @@ func createTopicIfNotExists(broker, topic, username, password, secure string) {
 	if err != nil {
 		fmt.Printf("Warning: failed to connect to Kafka broker for topic check: %v\n", err)
 		return
-	}
+	}	
 	defer conn.Close()
 
 	controller, err := conn.Controller()

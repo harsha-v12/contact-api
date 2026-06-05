@@ -7,42 +7,23 @@ import (
 	"contact-management/models"
 	"contact-management/repository"
 
-	"github.com/gin-gonic/gin"
+	"github.com/labstack/echo/v4"
 )
 
-// ListContactsHandler handles GET /api/v1/contacts
-// Supports: pagination, sorting, full-text search, and multiple filters.
-//
-// Query Parameters:
-//
-//	page          int      (default: 1)
-//	limit         int      (default: 20, max: 200)
-//	sort_by       string   (first_name | last_name | email | created_at | last_activity_at)
-//	sort_order    string   (asc | desc, default: desc)
-//	search        string   (partial, case-insensitive match on name / email / mobile)
-//	tags          []string (repeated: ?tags=VIP&tags=Prospect — contact must have at least one)
-//	country       string
-//	state         string
-//	city          string
-//	created_from  string   (YYYY-MM-DD)
-//	created_to    string   (YYYY-MM-DD)
-//	activity_from string   (YYYY-MM-DD)
-//	activity_to   string   (YYYY-MM-DD)
-func ListContactsHandler(c *gin.Context) {
+// ListContactsHandler handles GET /api/v1/contacts with support of pagination all the things 
+func ListContactsHandler(c echo.Context) error {
 	var filter models.ContactListFilter
 
-	// Bind all query params at once (gin handles repeated keys for slices)
-	if err := c.ShouldBindQuery(&filter); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid query parameters: " + err.Error()})
-		return
+	// Bind all query params at once
+	if err := c.Bind(&filter); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{"error": "invalid query parameters: " + err.Error()})
 	}
 
-	ctx := c.Request.Context()
+	ctx := c.Request().Context()
 
 	contacts, total, err := repository.ListContacts(ctx, filter)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
 	}
 
 	// Apply defaults here as well to return consistent meta
@@ -60,7 +41,7 @@ func ListContactsHandler(c *gin.Context) {
 		totalPages = int(math.Ceil(float64(total) / float64(limit)))
 	}
 
-	c.JSON(http.StatusOK, models.ContactListResponse{
+	return c.JSON(http.StatusOK, models.ContactListResponse{
 		Data:       contacts,
 		Total:      total,
 		Page:       page,

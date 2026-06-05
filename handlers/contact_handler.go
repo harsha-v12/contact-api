@@ -7,38 +7,30 @@ import (
 	"contact-management/models"
 	"contact-management/repository"
 
-	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
 )
 
-// CreateContactHandler handles POST /api/v1/contacts
-func CreateContactHandler(c *gin.Context) {
+func CreateContactHandler(c echo.Context) error {
 	var req models.ContactCreateRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{"error": err.Error()})
 	}
 
-	// Validate request fields
 	if err := req.Validate(); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{"error": err.Error()})
 	}
 
-	ctx := c.Request.Context()
+	ctx := c.Request().Context()
 
-	// Check duplicates
 	isDuplicate, err := repository.CheckDuplicate(ctx, req.Email, req.MobileNumber, nil)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
 	}
 	if isDuplicate {
-		c.JSON(http.StatusConflict, gin.H{"error": "contact with this email or mobile number already exists"})
-		return
+		return c.JSON(http.StatusConflict, map[string]interface{}{"error": "contact with this email or mobile number already exists"})
 	}
 
-	// Parse DateOfBirth
 	var dob time.Time
 	if req.DateOfBirth != "" {
 		dob, _ = time.Parse("2006-01-02", req.DateOfBirth)
@@ -47,7 +39,6 @@ func CreateContactHandler(c *gin.Context) {
 	now := time.Now()
 	contactID := uuid.New()
 
-	// Build Contact Model
 	contact := &models.Contact{
 		ID:             contactID,
 		FirstName:      req.FirstName,
@@ -67,13 +58,10 @@ func CreateContactHandler(c *gin.Context) {
 		Version:        now,
 	}
 
-	// Save to DB
 	if err := repository.CreateContact(ctx, contact); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
 	}
 
-	// Save Initial Note if provided
 	if req.Notes != "" {
 		note := &models.ContactNote{
 			ID:        uuid.New(),
@@ -86,7 +74,6 @@ func CreateContactHandler(c *gin.Context) {
 		}
 		_ = repository.AddContactNote(ctx, note)
 
-		// Log Note Added Activity
 		_ = repository.AddContactActivity(ctx, &models.ContactActivity{
 			ID:           uuid.New(),
 			ContactID:    contactID,
@@ -96,7 +83,6 @@ func CreateContactHandler(c *gin.Context) {
 		})
 	}
 
-	// Log Created Activity
 	_ = repository.AddContactActivity(ctx, &models.ContactActivity{
 		ID:           uuid.New(),
 		ContactID:    contactID,
@@ -105,91 +91,70 @@ func CreateContactHandler(c *gin.Context) {
 		CreatedAt:    now,
 	})
 
-	c.JSON(http.StatusCreated, contact)
+	return c.JSON(http.StatusCreated, contact)
 }
 
-// GetContactProfileHandler handles GET /api/v1/contacts/:id
-func GetContactProfileHandler(c *gin.Context) {
+func GetContactProfileHandler(c echo.Context) error {
 	contactIDStr := c.Param("id")
 	contactID, err := uuid.Parse(contactIDStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid contact UUID"})
-		return
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{"error": "invalid contact UUID"})
 	}
 
-	ctx := c.Request.Context()
+	ctx := c.Request().Context()
 
-	// Get basic info
 	contact, err := repository.GetContactByID(ctx, contactID)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "contact not found"})
-		return
+		return c.JSON(http.StatusNotFound, map[string]interface{}{"error": "contact not found"})
 	}
 
-	// Check if soft-deleted
 	if contact.IsDeleted == 1 {
-		c.JSON(http.StatusNotFound, gin.H{"error": "contact is deleted"})
-		return
+		return c.JSON(http.StatusNotFound, map[string]interface{}{"error": "contact is deleted"})
 	}
 
-	// Get Notes
 	notes, _ := repository.GetContactNotes(ctx, contactID)
-
-	// Get Activity Summary
 	summary, _ := repository.GetContactActivitySummary(ctx, contactID)
-
-	// Get Activity Timeline
 	activities, _ := repository.GetContactActivities(ctx, contactID)
 
-	c.JSON(http.StatusOK, gin.H{
+	return c.JSON(http.StatusOK, map[string]interface{}{
 		"contact":          contact,
 		"notes":            notes,
 		"activity_summary": summary,
-		"activities":      activities,
+		"activities":       activities,
 	})
 }
 
-// UpdateContactHandler handles PUT /api/v1/contacts/:id
-func UpdateContactHandler(c *gin.Context) {
+func UpdateContactHandler(c echo.Context) error {
 	contactIDStr := c.Param("id")
 	contactID, err := uuid.Parse(contactIDStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid contact UUID"})
-		return
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{"error": "invalid contact UUID"})
 	}
 
 	var req models.ContactUpdateRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{"error": err.Error()})
 	}
 
 	if err := req.Validate(); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{"error": err.Error()})
 	}
 
-	ctx := c.Request.Context()
+	ctx := c.Request().Context()
 
-	// Fetch existing
 	existing, err := repository.GetContactByID(ctx, contactID)
 	if err != nil || existing.IsDeleted == 1 {
-		c.JSON(http.StatusNotFound, gin.H{"error": "contact not found"})
-		return
+		return c.JSON(http.StatusNotFound, map[string]interface{}{"error": "contact not found"})
 	}
 
-	// Check duplicate email/mobile on other contacts
 	isDuplicate, err := repository.CheckDuplicate(ctx, req.Email, req.MobileNumber, &contactID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
 	}
 	if isDuplicate {
-		c.JSON(http.StatusConflict, gin.H{"error": "another contact already uses this email or mobile number"})
-		return
+		return c.JSON(http.StatusConflict, map[string]interface{}{"error": "another contact already uses this email or mobile number"})
 	}
 
-	// Parse DOB
 	var dob time.Time
 	if req.DateOfBirth != "" {
 		dob, _ = time.Parse("2006-01-02", req.DateOfBirth)
@@ -197,7 +162,6 @@ func UpdateContactHandler(c *gin.Context) {
 
 	now := time.Now()
 
-	// Update fields
 	existing.FirstName = req.FirstName
 	existing.LastName = req.LastName
 	existing.Email = req.Email
@@ -212,111 +176,92 @@ func UpdateContactHandler(c *gin.Context) {
 	existing.Version = now 
 
 	if err := repository.UpdateContact(ctx, existing); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
 	}
 
-	c.JSON(http.StatusOK, existing)
+	return c.JSON(http.StatusOK, existing)
 }
 
-// DeleteContactHandler handles DELETE /api/v1/contacts/:id
-func DeleteContactHandler(c *gin.Context) {
+func DeleteContactHandler(c echo.Context) error {
 	contactIDStr := c.Param("id")
 	contactID, err := uuid.Parse(contactIDStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid contact UUID"})
-		return
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{"error": "invalid contact UUID"})
 	}
 
-	ctx := c.Request.Context()
+	ctx := c.Request().Context()
 
-	// Retrieve to verify existence
 	_, err = repository.GetContactByID(ctx, contactID)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "contact not found"})
-		return
+		return c.JSON(http.StatusNotFound, map[string]interface{}{"error": "contact not found"})
 	}
 
 	now := time.Now()
 	if err := repository.SoftDeleteContact(ctx, contactID, now); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "contact soft-deleted successfully"})
+	return c.JSON(http.StatusOK, map[string]interface{}{"message": "contact soft-deleted successfully"})
 }
 
-// RestoreContactHandler handles POST /api/v1/contacts/:id/restore
-func RestoreContactHandler(c *gin.Context) {
+func RestoreContactHandler(c echo.Context) error {
 	contactIDStr := c.Param("id")
 	contactID, err := uuid.Parse(contactIDStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid contact UUID"})
-		return
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{"error": "invalid contact UUID"})
 	}
 
-	ctx := c.Request.Context()
+	ctx := c.Request().Context()
 
-	// Verify existence
 	_, err = repository.GetContactByID(ctx, contactID)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "contact not found"})
-		return
+		return c.JSON(http.StatusNotFound, map[string]interface{}{"error": "contact not found"})
 	}
 
 	now := time.Now()
 	if err := repository.RestoreContact(ctx, contactID, now); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "contact restored successfully"})
+	return c.JSON(http.StatusOK, map[string]interface{}{"message": "contact restored successfully"})
 }
 
-// GetNotesHandler handles GET /api/v1/contacts/:id/notes
-func GetNotesHandler(c *gin.Context) {
+func GetNotesHandler(c echo.Context) error {
 	contactIDStr := c.Param("id")
 	contactID, err := uuid.Parse(contactIDStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid contact UUID"})
-		return
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{"error": "invalid contact UUID"})
 	}
 
-	ctx := c.Request.Context()
+	ctx := c.Request().Context()
 
 	notes, err := repository.GetContactNotes(ctx, contactID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
 	}
 
-	c.JSON(http.StatusOK, notes)
+	return c.JSON(http.StatusOK, notes)
 }
 
-// AddNoteHandler handles POST /api/v1/contacts/:id/notes
-func AddNoteHandler(c *gin.Context) {
+func AddNoteHandler(c echo.Context) error {
 	contactIDStr := c.Param("id")
 	contactID, err := uuid.Parse(contactIDStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid contact UUID"})
-		return
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{"error": "invalid contact UUID"})
 	}
 
 	var req struct {
 		Note string `json:"note" binding:"required"`
 	}
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{"error": err.Error()})
 	}
 
-	ctx := c.Request.Context()
+	ctx := c.Request().Context()
 
-	// Verify contact exists
 	contact, err := repository.GetContactByID(ctx, contactID)
 	if err != nil || contact.IsDeleted == 1 {
-		c.JSON(http.StatusNotFound, gin.H{"error": "contact not found"})
-		return
+		return c.JSON(http.StatusNotFound, map[string]interface{}{"error": "contact not found"})
 	}
 
 	now := time.Now()
@@ -331,16 +276,13 @@ func AddNoteHandler(c *gin.Context) {
 	}
 
 	if err := repository.AddContactNote(ctx, note); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
 	}
 
-	// Update contact's LastActivityAt
 	contact.LastActivityAt = now
 	contact.Version = now
 	_ = repository.UpdateContact(ctx, contact)
 
-	// Log activity
 	_ = repository.AddContactActivity(ctx, &models.ContactActivity{
 		ID:           uuid.New(),
 		ContactID:    contactID,
@@ -349,40 +291,34 @@ func AddNoteHandler(c *gin.Context) {
 		CreatedAt:    now,
 	})
 
-	c.JSON(http.StatusCreated, note)
+	return c.JSON(http.StatusCreated, note)
 }
 
-// UpdateNoteHandler handles PUT /api/v1/contacts/:id/notes/:note_id
-func UpdateNoteHandler(c *gin.Context){
+func UpdateNoteHandler(c echo.Context) error {
 	contactIDStr := c.Param("id")
 	contactID, err := uuid.Parse(contactIDStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid contact UUID"})
-		return
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{"error": "invalid contact UUID"})
 	}
 
 	noteIDStr := c.Param("note_id")
 	noteID, err := uuid.Parse(noteIDStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid note UUID"})
-		return
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{"error": "invalid note UUID"})
 	}
 
 	var req struct {
 		Note string `json:"note" binding:"required"`
 	}
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{"error": err.Error()})
 	}
 
-	ctx := c.Request.Context()
+	ctx := c.Request().Context()
 
-	// Fetch note first to verify
 	note, err := repository.GetContactNoteByID(ctx, contactID, noteID)
 	if err != nil || note.IsDeleted == 1 {
-		c.JSON(http.StatusNotFound, gin.H{"error": "note not found"})
-		return
+		return c.JSON(http.StatusNotFound, map[string]interface{}{"error": "note not found"})
 	}
 
 	now := time.Now()
@@ -391,11 +327,9 @@ func UpdateNoteHandler(c *gin.Context){
 	note.Version = now // new version
 
 	if err := repository.UpdateContactNote(ctx, note); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
 	}
 
-	// Update contact activity
 	contact, err := repository.GetContactByID(ctx, contactID)
 	if err == nil {
 		contact.LastActivityAt = now
@@ -403,32 +337,27 @@ func UpdateNoteHandler(c *gin.Context){
 		_ = repository.UpdateContact(ctx, contact)
 	}
 
-	c.JSON(http.StatusOK, note)
+	return c.JSON(http.StatusOK, note)
 }
 
-// DeleteNoteHandler handles DELETE /api/v1/contacts/:id/notes/:note_id
-func DeleteNoteHandler(c *gin.Context) {
+func DeleteNoteHandler(c echo.Context) error {
 	contactIDStr := c.Param("id")
 	contactID, err := uuid.Parse(contactIDStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid contact UUID"})
-		return
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{"error": "invalid contact UUID"})
 	}
 
 	noteIDStr := c.Param("note_id")
 	noteID, err := uuid.Parse(noteIDStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid note UUID"})
-		return
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{"error": "invalid note UUID"})
 	}
 
-	ctx := c.Request.Context()
+	ctx := c.Request().Context()
 
-	// Fetch note first to verify
 	note, err := repository.GetContactNoteByID(ctx, contactID, noteID)
 	if err != nil || note.IsDeleted == 1 {
-		c.JSON(http.StatusNotFound, gin.H{"error": "note not found"})
-		return
+		return c.JSON(http.StatusNotFound, map[string]interface{}{"error": "note not found"})
 	}
 
 	now := time.Now()
@@ -437,11 +366,9 @@ func DeleteNoteHandler(c *gin.Context) {
 	note.Version = now
 
 	if err := repository.UpdateContactNote(ctx, note); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
 	}
 
-	// Update contact activity
 	contact, err := repository.GetContactByID(ctx, contactID)
 	if err == nil {
 		contact.LastActivityAt = now
@@ -449,33 +376,28 @@ func DeleteNoteHandler(c *gin.Context) {
 		_ = repository.UpdateContact(ctx, contact)
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "note deleted successfully"})
+	return c.JSON(http.StatusOK, map[string]interface{}{"message": "note deleted successfully"})
 }
 
-// UpdateTagsHandler handles PATCH /api/v1/contacts/:id/tags
-func UpdateTagsHandler(c *gin.Context) {
+func UpdateTagsHandler(c echo.Context) error {
 	contactIDStr := c.Param("id")
 	contactID, err := uuid.Parse(contactIDStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid contact UUID"})
-		return
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{"error": "invalid contact UUID"})
 	}
 
 	var req struct {
 		Tags []string `json:"tags" binding:"required"`
 	}
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{"error": err.Error()})
 	}
 
-	ctx := c.Request.Context()
+	ctx := c.Request().Context()
 
-	// Fetch contact
 	contact, err := repository.GetContactByID(ctx, contactID)
 	if err != nil || contact.IsDeleted == 1 {
-		c.JSON(http.StatusNotFound, gin.H{"error": "contact not found"})
-		return
+		return c.JSON(http.StatusNotFound, map[string]interface{}{"error": "contact not found"})
 	}
 
 	now := time.Now()
@@ -484,9 +406,8 @@ func UpdateTagsHandler(c *gin.Context) {
 	contact.Version = now
 
 	if err := repository.UpdateContact(ctx, contact); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
 	}
 
-	c.JSON(http.StatusOK, contact)
+	return c.JSON(http.StatusOK, contact)
 }

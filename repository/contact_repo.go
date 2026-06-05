@@ -277,7 +277,7 @@ func GetContactActivitySummary(ctx context.Context, contactID uuid.UUID) (map[st
 	for rows.Next() {
 		var actType string
 		var count uint64
-		if err := rows.Scan(&actType, &count); err != nil {
+		if err := rows.Scan(&actType,&count); err != nil {
 			return nil, fmt.Errorf("failed to scan activity summary row: %w", err)
 		}
 		summary[actType] = int(count)

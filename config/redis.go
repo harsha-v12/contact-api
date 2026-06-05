@@ -34,7 +34,7 @@ func ConnectRedis() {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-
+	
 	if err := rdb.Ping(ctx).Err(); err != nil {
 		panic(fmt.Errorf("failed to ping redis at %s: %w", redisHost, err))
 	}
@@ -42,3 +42,5 @@ func ConnectRedis() {
 	RedisClient = rdb
 	fmt.Printf("Connected to Redis successfully (%s, TLS: %s)!\n", redisHost, redisSecure)
 }
+
+
