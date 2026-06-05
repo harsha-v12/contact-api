@@ -25,7 +25,9 @@ func ConnectKafka() {
 	// Pre-create topic if it doesn't exist (helpful for local setup)
 	createTopicIfNotExists(broker, topic, username, password, secure)
 
-	var transport *kafka.Transport
+	transport := &kafka.Transport{
+		DialTimeout: 10 * time.Second,
+	}
 	if username != "" {
 		mechanism := plain.Mechanism{
 			Username: username,
@@ -35,11 +37,8 @@ func ConnectKafka() {
 		if secure == "true" {
 			tlsConfig = &tls.Config{}
 		}
-		transport = &kafka.Transport{
-			SASL:        mechanism,
-			TLS:         tlsConfig,
-			DialTimeout: 10 * time.Second,
-		}
+		transport.SASL = mechanism
+		transport.TLS = tlsConfig
 	}
 
 	KafkaWriter = &kafka.Writer{

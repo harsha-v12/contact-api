@@ -10,6 +10,7 @@ import (
 
 	"contact-management/config"
 	"contact-management/routes"
+	"contact-management/worker"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -28,7 +29,10 @@ func main() {
 	config.ConnectKafka()
 	defer config.CloseKafka()
 
-	// 3. Setup Gin router
+	// 3. Start background Kafka consumer for CSV imports
+	go worker.StartImportConsumer()
+
+	// 4. Setup Gin router
 	r := gin.Default()
 
 	// CORS Middleware
@@ -48,7 +52,15 @@ func main() {
 	// Register API Routes
 	routes.RegisterRoutes(r)
 
-	// 4. Health Check Endpoint
+	// 4. Default Root Endpoint
+	r.GET("/", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"message": "Contact Management API is running! 🚀",
+			"version": "1.0",
+		})
+	})
+
+	// 5. Health Check Endpoint
 	r.GET("/health", func(c *gin.Context) {
 		healthStatus := gin.H{
 			"status":      "UP",
