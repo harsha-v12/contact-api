@@ -20,6 +20,8 @@ func CheckDuplicate(ctx context.Context, email, mobileNumber string, excludeID *
 	var query string
 	var args []interface{}
 
+
+	// used for the update case 
 	if excludeID != nil {
 		query = `
 			SELECT count() 
@@ -33,6 +35,7 @@ func CheckDuplicate(ctx context.Context, email, mobileNumber string, excludeID *
 		`
 		args = append(args, *excludeID, email, mobileNumber)
 	} else {
+		// used for the create the contact of the user 
 		query = `
 			SELECT count() 
 			FROM contacts FINAL 
@@ -74,6 +77,13 @@ func CreateContact(ctx context.Context, c *models.Contact) error {
 	return nil
 }
 
+// Given a Contact ID
+//         ↓
+// Fetch that contact from ClickHouse
+//         ↓
+// Convert DB row → Go struct
+//         ↓
+// Return Contact object
 // GetContactByID retrieves a contact by UUID
 func GetContactByID(ctx context.Context, id uuid.UUID) (*models.Contact, error) {
 	query := `
