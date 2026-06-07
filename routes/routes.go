@@ -1,9 +1,13 @@
 package routes
 
 import (
+	"contact-management/config"
 	"contact-management/handlers"
 	"contact-management/middleware"
+	"net"
 	"net/http"
+	"os"
+	"time"
 
 	"github.com/labstack/echo/v4"
 )
@@ -21,9 +25,42 @@ func RegisterRoutes(e *echo.Echo) {
 
 	// Health check
 	e.GET("/health", func(c echo.Context) error {
-		return c.JSON(http.StatusOK, map[string]string{
-			"status": "healthy",
-		})
+		healthStatus := map[string]interface{}{
+			"status":      "UP",
+			"clickhouse":  "UP",
+			"redis":       "UP",
+			"kafka":       "UP",
+		}
+
+		// Check ClickHouse
+		if err := config.DB.Ping(c.Request().Context()); err != nil {
+			healthStatus["clickhouse"] = "DOWN"
+			healthStatus["status"] = "DEGRADED"
+		}
+
+		// Check Redis
+		if err := config.RedisClient.Ping(c.Request().Context()).Err(); err != nil {
+			healthStatus["redis"] = "DOWN"
+			healthStatus["status"] = "DEGRADED"
+		}
+
+		// Check Kafka (Real-time TCP Ping)
+		kafkaBroker := os.Getenv("KAFKA_BROKER")
+		if kafkaBroker == "" {
+			kafkaBroker = "localhost:9092"
+		}
+		conn, kafkaErr := net.DialTimeout("tcp", kafkaBroker, 3*time.Second)
+		if kafkaErr != nil {
+			healthStatus["kafka"] = "DOWN"
+			healthStatus["status"] = "DEGRADED"
+		} else {
+			conn.Close()
+		}
+
+		if healthStatus["status"] == "UP" {
+			return c.JSON(http.StatusOK, healthStatus)
+		}
+		return c.JSON(http.StatusServiceUnavailable, healthStatus)
 	})
 
 	// API v1 Group

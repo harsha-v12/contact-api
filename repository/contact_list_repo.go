@@ -39,7 +39,7 @@ func ListContacts(ctx context.Context, f models.ContactListFilter) ([]models.Con
 		sortDir = "ASC"
 	}
 
-	// ── Build WHERE clauses ───────────────────────────────────────────────────
+	//  Build WHERE clauses 
 	where := []string{"is_deleted = 0"}
 	args := []interface{}{}
 

@@ -1,70 +1,101 @@
-# Contact Management API — Codebase Overview
+# Contact Management API
 
-This document explains **why** this project is built the way it is, how the different pieces connect, and how data flows through the entire system.
-
-## 🏗️ The Architecture: Why these tools?
-
-Instead of building a simple, generic API, this project is built like an "enterprise-grade" system capable of handling millions of contacts. Here is why we chose specific technologies:
-
-1. **Golang (Go):** Chosen for its raw speed and ability to handle thousands of requests at the same time using extremely low memory.
-2. **ClickHouse:** A standard database like MySQL or PostgreSQL slows down when you search through millions of rows. ClickHouse is a columnar database designed specifically for lightning-fast analytics and massive data sets.
-3. **Redis:** When thousands of users ask "What is the progress of my CSV import?", querying ClickHouse over and over would slow it down. Redis is an in-memory database that responds in milliseconds, making it perfect for tracking live progress.
-4. **Apache Kafka:** If a user uploads a CSV with 50,000 contacts, parsing and inserting them instantly would freeze the API and crash the server. Kafka acts as a "waiting room" (message queue), allowing a background worker to process the contacts at a safe, steady pace without making the user wait.
+A high-performance, enterprise-grade Contact Management System built with Golang, Echo, ClickHouse, Redis, Kafka, and Docker.
 
 ---
 
-## 📁 Codebase Structure
+## 🚀 Architecture Overview
 
-The project is organized using a standard Go folder structure:
+This project is designed to handle massive amounts of contact data with blazing-fast read/write speeds and background processing for bulk CSV imports.
 
-*   `cmd/main.go` : The entry point. It boots up the server, connects to databases, and starts the Kafka background worker.
-*   `config/` : Handles connecting to ClickHouse, Redis, and Kafka.
-*   `models/` : Defines the shape of the data (Structs) for Contacts, Notes, and Activities.
-*   `routes/` : The switchboard. It maps URLs (like `GET /api/v1/contacts`) to specific handler functions.
-*   `handlers/` : The brain of the API. It reads the incoming requests (JSON or CSV), validates them, and decides what to do next.
-*   `repository/` : The database layer. This is the **only** place in the code that actually writes SQL queries to ClickHouse.
-*   `services/` : Handles external logic, primarily talking to Redis to update progress.
-*   `worker/` : The background processor. It listens to Kafka, reads CSV files, and saves them to the database.
+- **Golang & Echo:** The core HTTP server providing the RESTful API.
+- **ClickHouse:** The primary analytical database, storing contacts, notes, and activity logs.
+- **Redis:** An in-memory data store used to track the real-time progress percentages of bulk CSV imports.
+- **Kafka & Zookeeper:** The message broker handling background jobs (like processing large CSV files) so the main API doesn't freeze.
+- **Docker:** Containerized infrastructure to run Kafka and the AKHQ dashboard locally.
 
 ---
 
-## ⚙️ Module 1: Core Contact Management
+## 🏗️ Project Creation (Step-by-Step Architecture)
 
-This module handles creating, viewing, updating, and deleting individual contacts.
+If you are trying to understand how this project was built from scratch, here is the exact chronological file structure:
 
-### The Flow of a "Create Contact" Request
-1. **The Request:** A user sends a `POST /api/v1/contacts` with JSON data.
-2. **The Handler (`handlers/contact_handler.go`):** Validates the JSON. It checks if the email is valid and ensures required fields are present.
-3. **The Database (`repository/contact_repo.go`):** The handler asks the repository to save the contact. The repository runs an `INSERT INTO contacts` SQL query in ClickHouse.
-4. **Activity Logging:** Because we want a timeline of everything that happens to a contact, the handler automatically creates a `contact_created` activity log right after saving.
+### 1. Initialization
+- `go.mod` (Go modules initialization)
+- `.env` (Secure environment variables)
 
-### Soft Deletes
-When you delete a contact, we don't actually erase them from ClickHouse. Instead, we insert a new "version" of the contact with `is_deleted = 1`. This is called a **Soft Delete**. It allows you to use the `POST /:id/restore` endpoint to instantly bring them back!
+### 2. The Data Layer (Configurations & Database Connections)
+- `config/database.go` (ClickHouse connection)
+- `config/redis.go` (Redis connection)
+- `config/kafka.go` (Kafka producer connection)
+
+### 3. The Models (Data Structures)
+- `models/contact.go` (Contact, Notes, and Activity structs)
+- `models/import.go` (CSV Import tracking structs)
+
+### 4. The Repository (SQL Queries & Services)
+- `repository/contact_repo.go` (CRUD SQL queries)
+- `repository/contact_list_repo.go` (Pagination & search SQL queries)
+- `services/redis_service.go` (Redis tracking logic)
+
+### 5. The API Handlers (Processing Requests)
+- `handlers/contact_handler.go` (Create, Update, Delete contacts)
+- `handlers/contact_list_handler.go` (Listing contacts)
+- `handlers/activity_handler.go` (Managing contact activities/notes)
+- `handlers/import_handler.go` (Uploading CSV files to Kafka)
+
+### 6. The Background Worker (Heavy Lifting)
+- `worker/import_consumer.go` (Kafka consumer that reads the CSV and saves to ClickHouse)
+
+### 7. Tying it Together (Routing & Main)
+- `middleware/auth.go` (X-API-Key security check)
+- `routes/routes.go` (Maps URLs to Handlers)
+- `cmd/main.go` (The entry point that boots up the server)
 
 ---
 
-## 🚀 Module 2: High-Volume CSV Import
+## 🛠️ How to Run the Project
 
-This module is designed to safely import massive amounts of data without crashing the server.
+### Prerequisites
+1. **Golang** (v1.20+)
+2. **Docker Desktop**
+3. **Postman** (For testing)
 
-### The Flow of a CSV Import
-1. **The Upload (`handlers/import_handler.go`):**
-   * The user uploads a CSV file.
-   * The API saves the file temporarily to the `./uploads` folder.
-   * It creates a job in **Redis** with `0%` progress.
-   * It sends a tiny message to **Kafka** that says: *"Hey, there is a new file waiting to be processed!"*
-   * It immediately replies `202 Accepted` to the user so they don't have to wait.
+### Step 1: Environment Variables
+Ensure you have a `.env` file in the root directory with your database credentials:
+```env
+PORT=8081
+API_KEY=a6b33986d7afd06bcdd55fbd22590c7121ab3b3e3e4c8218226dba77d7c5ae0d
+CLICKHOUSE_HOST=o9zp3jdtug.ap-south-1.aws.clickhouse.cloud
+CLICKHOUSE_PORT=9440
+CLICKHOUSE_DB=default
+CLICKHOUSE_USER=default
+CLICKHOUSE_PASSWORD=your_password
+CLICKHOUSE_SECURE=true
+REDIS_ADDR=trending-exquisite-turn-73130.db.redis.io:13914
+REDIS_PASSWORD=your_password
+REDIS_DB=0
+REDIS_SECURE=false
+KAFKA_BROKER=localhost:9092
+KAFKA_TOPIC=contact-import
+```
 
-2. **The Background Worker (`worker/import_consumer.go`):**
-   * The worker (which is constantly listening to Kafka) receives the message.
-   * It opens the CSV file from the `./uploads` folder and starts reading it row by row.
-   * For every row, it checks if the email already exists in ClickHouse (`CheckDuplicate`).
-   * If it's new, it saves it to ClickHouse.
-   * Every 100 rows, it updates the live progress in **Redis**.
+### Step 2: Start Infrastructure
+Open your terminal and start Kafka via Docker:
+```powershell
+docker compose up -d
+```
 
-3. **The Progress Tracker:**
-   * The user constantly calls `GET /api/v1/contacts/import/:id`.
-   * This API bypasses ClickHouse entirely and looks directly at **Redis**, returning the live `processed_records` and `completion_percentage` instantly.
+### Step 3: Start the API
+Install packages and start the Go server:
+```powershell
+go mod tidy
+go run ./cmd/main.go
+```
 
-### Why do it this way?
-If we didn't use Kafka and Redis, a user uploading a 100MB CSV file would have to sit staring at a loading screen for 5 minutes. If their internet disconnected during that time, the upload would fail! By using Kafka, we guarantee the file is processed safely in the background, no matter what happens to the user's internet connection.
+### Step 4: Test in Postman
+Include your API Key in the headers for all requests:
+- **Key:** `X-API-Key`
+- **Value:** `a6b33986d7afd06bcdd55fbd22590c7121ab3b3e3e4c8218226dba77d7c5ae0d`
+
+*View live Kafka messages at `http://localhost:8082` (AKHQ Dashboard).*
