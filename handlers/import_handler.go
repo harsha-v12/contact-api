@@ -144,3 +144,41 @@ func GetImportStatusHandler(c echo.Context) error {
 		"completed_at":          job.CompletedAt,
 	})
 }
+
+
+
+
+// flow of the structure import the status 
+// flow structure of the import csv file
+
+// User uploads CSV
+//         ↓
+// API saves CSV file
+//         ↓
+// Kafka Producer sends:
+// {
+//   import_id,
+//   file_path
+// }
+//         ↓
+// Kafka Topic
+//         ↓
+// Worker Consumer reads message
+//         ↓
+// processImportJob()
+//         ↓
+// Open CSV
+//         ↓
+// Read rows
+//         ↓
+// Check duplicates
+//         ↓
+// Insert contacts
+//         ↓
+// Create activities
+//         ↓
+// Update progress
+//         ↓
+// Mark completed
+//         ↓
+// Delete CSV file

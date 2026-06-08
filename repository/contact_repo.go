@@ -85,6 +85,7 @@ func CreateContact(ctx context.Context, c *models.Contact) error {
 //         ↓
 // Return Contact object
 // GetContactByID retrieves a contact by UUID
+
 func GetContactByID(ctx context.Context, id uuid.UUID) (*models.Contact, error) {
 	query := `
 		SELECT 
@@ -274,6 +275,8 @@ func GetContactActivitySummary(ctx context.Context, contactID uuid.UUID) (map[st
 	}
 	defer rows.Close()
 
+	// since we are using  not any real time data like whatsapp,email data 
+	// created the summary map strictly with with
 	summary := map[string]int{
 		"contact_created":  0,
 		"note_added":       0,

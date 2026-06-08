@@ -33,7 +33,7 @@ func main() {
 	config.ConnectKafka()
 	defer config.CloseKafka()
 
-	// 3. Start background Kafka consumer for CSV imports
+	// 3. Start background Kafka consumer for CSV imports infinitely if any topic exits in kafka then consumer takes the topic and process the data 
 	go worker.StartImportConsumer()
 
 	// 4. Setup Echo router

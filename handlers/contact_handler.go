@@ -173,7 +173,7 @@ func UpdateContactHandler(c echo.Context) error {
 	existing.Country = req.Country
 	existing.Tags = req.Tags
 	existing.LastActivityAt = now
-	existing.Version = now 
+	existing.Version = now
 
 	if err := repository.UpdateContact(ctx, existing); err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
@@ -201,7 +201,7 @@ func DeleteContactHandler(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
 	}
 
-	return c.JSON(http.StatusOK, map[string]interface{}{"message": "contact soft-deleted successfully"})
+	return c.JSON(http.StatusOK, map[string]interface{}{"message": "contact Deleted successfully"})
 }
 
 func RestoreContactHandler(c echo.Context) error {

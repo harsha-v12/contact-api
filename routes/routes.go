@@ -71,7 +71,8 @@ func RegisterRoutes(e *echo.Echo) {
 
 		// Contacts Group
 		contacts := v1.Group("/contacts")
-		{
+		{	
+			//contact endpoints with all CRUD operations
 			contacts.GET("", handlers.ListContactsHandler)
 			contacts.POST("", handlers.CreateContactHandler)
 			contacts.GET("/:id", handlers.GetContactProfileHandler)

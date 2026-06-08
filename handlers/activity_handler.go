@@ -6,7 +6,6 @@ import (
 
 	"contact-management/models"
 	"contact-management/repository"
-
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 )
