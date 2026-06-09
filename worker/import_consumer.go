@@ -95,6 +95,35 @@ func processImportJob(msg models.CSVImportMessage) {
 			failed++
 			continue
 		}
+		// added for the checking the given data is correct format or not 
+
+		firstName := row[0]
+		email := row[2]
+		mobileNumber := row[3]
+
+		if firstName == "" {
+			log.Printf("[Worker] Skipping row %d: First Name is empty", i)
+			failed++
+			continue
+		}
+
+		if email == "" && mobileNumber == "" {
+			log.Printf("[Worker] Skipping row %d: Both Email and Mobile are empty", i)
+			failed++
+			continue
+		}
+
+		if email != "" && !models.EmailRegex.MatchString(email) {
+			log.Printf("[Worker] Skipping row %d: Invalid email format", i)
+			failed++
+			continue
+		}
+
+		if mobileNumber != "" && !models.MobileRegex.MatchString(mobileNumber) {
+			log.Printf("[Worker] Skipping row %d: Invalid mobile number format", i)
+			failed++
+			continue
+		}
 
 		now := time.Now()
 		contact := models.Contact{

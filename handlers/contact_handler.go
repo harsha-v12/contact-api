@@ -116,12 +116,73 @@ func GetContactProfileHandler(c echo.Context) error {
 	summary, _ := repository.GetContactActivitySummary(ctx, contactID)
 	activities, _ := repository.GetContactActivities(ctx, contactID)
 
-	return c.JSON(http.StatusOK, map[string]interface{}{
-		"contact":          contact,
-		"notes":            notes,
-		"activity_summary": summary,
-		"activities":       activities,
-	})
+	if notes == nil {
+		notes = make([]models.ContactNote, 0)
+	}
+	if activities == nil {
+		activities = make([]models.ContactActivity, 0)
+	}
+
+	name := contact.FirstName
+	if contact.LastName != "" {
+		name += " " + contact.LastName
+	}
+
+	type LocationStruct struct {
+		City    string `json:"City"`
+		State   string `json:"State"`
+		Country string `json:"Country"`
+	}
+
+	type BasicInfoStruct struct {
+		Name         string         `json:"Name"`
+		Email        string         `json:"Email"`
+		MobileNumber string         `json:"Mobile Number"`
+		DateOfBirth  time.Time      `json:"Date of Birth"`
+		Gender       string         `json:"Gender"`
+		Location     LocationStruct `json:"Location"`
+	}
+
+	type ActivitySummaryStruct struct {
+		TotalEmailsSent           int `json:"Total Emails Sent"`
+		TotalEventsAttended       int `json:"Total Events Attended"`
+		TotalMeetingsAttended     int `json:"Total Meetings Attended"`
+		TotalVideosWatched        int `json:"Total Videos Watched"`
+		TotalWhatsAppMessagesSent int `json:"Total WhatsApp Messages Sent"`
+	}
+
+	type ProfileResponse struct {
+		BasicInformation BasicInfoStruct          `json:"Basic Information"`
+		Notes            []models.ContactNote     `json:"Notes"`
+		ActivitySummary  ActivitySummaryStruct    `json:"Activity Summary"`
+		ActivityTimeline []models.ContactActivity `json:"Activity Timeline"`
+	}
+
+	response := ProfileResponse{
+		BasicInformation: BasicInfoStruct{
+			Name:         name,
+			Email:        contact.Email,
+			MobileNumber: contact.MobileNumber,
+			DateOfBirth:  contact.DateOfBirth,
+			Gender:       contact.Gender,
+			Location: LocationStruct{
+				City:    contact.City,
+				State:   contact.State,
+				Country: contact.Country,
+			},
+		},
+		Notes: notes,
+		ActivitySummary: ActivitySummaryStruct{
+			TotalEmailsSent:           summary["email_sent"],
+			TotalEventsAttended:       summary["event_attended"],
+			TotalMeetingsAttended:     summary["meeting_attended"],
+			TotalVideosWatched:        summary["video_watched"],
+			TotalWhatsAppMessagesSent: summary["whatsapp_sent"],
+		},
+		ActivityTimeline: activities,
+	}
+
+	return c.JSON(http.StatusOK, response)
 }
 
 func UpdateContactHandler(c echo.Context) error {

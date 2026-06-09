@@ -9,8 +9,8 @@ import (
 )
 
 var (
-	emailRegex  = regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
-	mobileRegex = regexp.MustCompile(`^\+?[1-9]\d{9,14}$`) 
+	EmailRegex  = regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
+	MobileRegex = regexp.MustCompile(`^\+?[1-9]\d{9,14}$`) 
 )
 
 // Contact represents the ClickHouse contact schema structure
@@ -78,11 +78,11 @@ func (r *ContactCreateRequest) Validate() error {
 		return fmt.Errorf("either email or mobile_number must be provided")
 	}
 
-	if r.Email != "" && !emailRegex.MatchString(r.Email) {
+	if r.Email != "" && !EmailRegex.MatchString(r.Email) {
 		return fmt.Errorf("email format is invalid")
 	}
 
-	if r.MobileNumber != "" && !mobileRegex.MatchString(r.MobileNumber) {
+	if r.MobileNumber != "" && !MobileRegex.MatchString(r.MobileNumber) {
 		return fmt.Errorf("mobile_number format is invalid (should be numeric, 10-15 digits, optional + prefix)")
 	}
 
@@ -120,11 +120,11 @@ func (r *ContactUpdateRequest) Validate() error {
 		return fmt.Errorf("either email or mobile_number must be provided")
 	}
 
-	if r.Email != "" && !emailRegex.MatchString(r.Email) {
+	if r.Email != "" && !EmailRegex.MatchString(r.Email) {
 		return fmt.Errorf("email format is invalid")
 	}
 
-	if r.MobileNumber != "" && !mobileRegex.MatchString(r.MobileNumber) {
+	if r.MobileNumber != "" && !MobileRegex.MatchString(r.MobileNumber) {
 		return fmt.Errorf("mobile_number format is invalid (should be numeric, 10-15 digits, optional + prefix)")
 	}
 
