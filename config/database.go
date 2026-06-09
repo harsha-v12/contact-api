@@ -25,7 +25,7 @@ func ConnectDB() {
 
 	var tlsConfig *tls.Config
 	if secure == "true" {
-		tlsConfig = &tls.Config{} // Enable secure TLS
+		tlsConfig = &tls.Config{} // Enable secure TLS if it is secure channel with security
 	}
 
 	conn, err := clickhouse.Open(&clickhouse.Options{
@@ -118,16 +118,16 @@ func CreateTables() {
 
 	// Migrate activity_type column from Enum8 to String if it exists as Enum
 	// Safe to run — ClickHouse ignores if column is already String
-	migrateActivityType := `
-	ALTER TABLE contact_activities
-	MODIFY COLUMN activity_type String`
+	// migrateActivityType := `
+	// ALTER TABLE contact_activities
+	// MODIFY COLUMN activity_type String`
 
-	if err := DB.Exec(ctx, migrateActivityType); err != nil {
-		// Log warning but don't panic — table may not need migration
-		fmt.Printf("Warning: activity_type column migration skipped: %v\n", err)
-	} else {
-		fmt.Println("contact_activities.activity_type column verified as String (dynamic).")
-	}
+	// if err := DB.Exec(ctx, migrateActivityType); err != nil {
+	// 	// Log warning but don't panic — table may not need migration
+	// 	fmt.Printf("Warning: activity_type column migration skipped: %v\n", err)
+	// } else {
+	// 	fmt.Println("contact_activities.activity_type column verified as String (dynamic).")
+	// }
 
 	fmt.Println("ClickHouse database schema check passed and tables verified.")
 }

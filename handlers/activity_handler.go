@@ -22,6 +22,17 @@ var validActivityTypes = map[string]bool{
 }
 
 
+// @Summary Log Activity
+// @Description Manually log a new activity for a contact.
+// @Tags activities
+// @Accept json
+// @Produce json
+// @Param id path string true "Contact UUID"
+// @Param request body map[string]string true "Activity details (activity_type, details)"
+// @Success 201 {object} models.ContactActivity
+// @Failure 400 {object} map[string]string "Validation error"
+// @Security ApiKeyAuth
+// @Router /contacts/{id}/activities [post]
 func LogActivityHandler(c echo.Context) error {
 	// Parse contact ID
 	contactIDStr := c.Param("id")
@@ -91,6 +102,15 @@ func LogActivityHandler(c echo.Context) error {
 
 // GetActivitiesHandler handles GET /api/v1/contacts/:id/activities
 // Returns the full chronological activity timeline for a contact
+// @Summary Get Activities
+// @Description Get the activity timeline and summary for a contact.
+// @Tags activities
+// @Produce json
+// @Param id path string true "Contact UUID"
+// @Success 200 {object} map[string]interface{}
+// @Failure 404 {object} map[string]string "Contact not found"
+// @Security ApiKeyAuth
+// @Router /contacts/{id}/activities [get]
 func GetActivitiesHandler(c echo.Context) error {
 	contactIDStr := c.Param("id")
 	contactID, err := uuid.Parse(contactIDStr)

@@ -11,6 +11,17 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+// @Summary Create a Contact
+// @Description Creates a new contact with strict validation
+// @Tags contacts
+// @Accept json
+// @Produce json
+// @Param request body models.ContactCreateRequest true "Contact data"
+// @Success 201 {object} models.Contact
+// @Failure 400 {object} map[string]string "Validation error"
+// @Failure 409 {object} map[string]string "Conflict (duplicate)"
+// @Security ApiKeyAuth
+// @Router /contacts [post]
 func CreateContactHandler(c echo.Context) error {
 	var req models.ContactCreateRequest
 	if err := c.Bind(&req); err != nil {
@@ -94,6 +105,15 @@ func CreateContactHandler(c echo.Context) error {
 	return c.JSON(http.StatusCreated, contact)
 }
 
+// @Summary Get Contact Profile
+// @Description View complete contact details, notes, and activity timeline.
+// @Tags contacts
+// @Produce json
+// @Param id path string true "Contact UUID"
+// @Success 200 {object} map[string]interface{}
+// @Failure 404 {object} map[string]string "Contact not found"
+// @Security ApiKeyAuth
+// @Router /contacts/{id} [get]
 func GetContactProfileHandler(c echo.Context) error {
 	contactIDStr := c.Param("id")
 	contactID, err := uuid.Parse(contactIDStr)
@@ -185,6 +205,18 @@ func GetContactProfileHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, response)
 }
 
+// @Summary Update Contact
+// @Description Update contact basic information
+// @Tags contacts
+// @Accept json
+// @Produce json
+// @Param id path string true "Contact UUID"
+// @Param request body models.ContactUpdateRequest true "Update data"
+// @Success 200 {object} models.Contact
+// @Failure 400 {object} map[string]string "Validation error"
+// @Failure 404 {object} map[string]string "Contact not found"
+// @Security ApiKeyAuth
+// @Router /contacts/{id} [put]
 func UpdateContactHandler(c echo.Context) error {
 	contactIDStr := c.Param("id")
 	contactID, err := uuid.Parse(contactIDStr)
@@ -223,16 +255,16 @@ func UpdateContactHandler(c echo.Context) error {
 
 	now := time.Now()
 
-	existing.FirstName = req.FirstName
-	existing.LastName = req.LastName
-	existing.Email = req.Email
-	existing.MobileNumber = req.MobileNumber
-	existing.Gender = req.Gender
-	existing.DateOfBirth = dob
-	existing.City = req.City
-	existing.State = req.State
-	existing.Country = req.Country
-	existing.Tags = req.Tags
+	if req.FirstName != "" { existing.FirstName = req.FirstName }
+	if req.LastName != "" { existing.LastName = req.LastName }
+	if req.Email != "" { existing.Email = req.Email }
+	if req.MobileNumber != "" { existing.MobileNumber = req.MobileNumber }
+	if req.Gender != "" { existing.Gender = req.Gender }
+	if req.DateOfBirth != "" { existing.DateOfBirth = dob }
+	if req.City != "" { existing.City = req.City }
+	if req.State != "" { existing.State = req.State }
+	if req.Country != "" { existing.Country = req.Country }
+	if req.Tags != nil { existing.Tags = req.Tags }
 	existing.LastActivityAt = now
 	existing.Version = now
 
@@ -243,6 +275,16 @@ func UpdateContactHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, existing)
 }
 
+// @Summary Soft Delete Contact
+// @Description Soft deletes a contact, keeping it in the database but removing it from active lists.
+// @Tags contacts
+// @Produce json
+// @Param id path string true "Contact UUID"
+// @Success 200 {object} map[string]string "message: contact Deleted successfully"
+// @Failure 400 {object} map[string]string "Already deleted"
+// @Failure 404 {object} map[string]string "Contact not found"
+// @Security ApiKeyAuth
+// @Router /contacts/{id} [delete]
 func DeleteContactHandler(c echo.Context) error {
 	contactIDStr := c.Param("id")
 	contactID, err := uuid.Parse(contactIDStr)
@@ -269,6 +311,16 @@ func DeleteContactHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]interface{}{"message": "contact Deleted successfully"})
 }
 
+// @Summary Restore Contact
+// @Description Restores a soft-deleted contact.
+// @Tags contacts
+// @Produce json
+// @Param id path string true "Contact UUID"
+// @Success 200 {object} map[string]string "message: contact restored successfully"
+// @Failure 400 {object} map[string]string "Already active"
+// @Failure 404 {object} map[string]string "Contact not found"
+// @Security ApiKeyAuth
+// @Router /contacts/{id}/restore [post]
 func RestoreContactHandler(c echo.Context) error {
 	contactIDStr := c.Param("id")
 	contactID, err := uuid.Parse(contactIDStr)
@@ -295,6 +347,15 @@ func RestoreContactHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]interface{}{"message": "contact restored successfully"})
 }
 
+// @Summary Get Notes
+// @Description View all notes for a specific contact.
+// @Tags notes
+// @Produce json
+// @Param id path string true "Contact UUID"
+// @Success 200 {array} models.ContactNote
+// @Failure 404 {object} map[string]string "Contact not found"
+// @Security ApiKeyAuth
+// @Router /contacts/{id}/notes [get]
 func GetNotesHandler(c echo.Context) error {
 	contactIDStr := c.Param("id")
 	contactID, err := uuid.Parse(contactIDStr)
@@ -312,6 +373,17 @@ func GetNotesHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, notes)
 }
 
+// @Summary Add Note
+// @Description Add a new note to a contact.
+// @Tags notes
+// @Accept json
+// @Produce json
+// @Param id path string true "Contact UUID"
+// @Param request body map[string]string true "Note content"
+// @Success 201 {object} models.ContactNote
+// @Failure 400 {object} map[string]string "Validation error"
+// @Security ApiKeyAuth
+// @Router /contacts/{id}/notes [post]
 func AddNoteHandler(c echo.Context) error {
 	contactIDStr := c.Param("id")
 	contactID, err := uuid.Parse(contactIDStr)
@@ -363,6 +435,18 @@ func AddNoteHandler(c echo.Context) error {
 	return c.JSON(http.StatusCreated, note)
 }
 
+// @Summary Update Note
+// @Description Edit an existing note.
+// @Tags notes
+// @Accept json
+// @Produce json
+// @Param id path string true "Contact UUID"
+// @Param note_id path string true "Note UUID"
+// @Param request body map[string]string true "Note content"
+// @Success 200 {object} models.ContactNote
+// @Failure 400 {object} map[string]string "Validation error"
+// @Security ApiKeyAuth
+// @Router /contacts/{id}/notes/{note_id} [put]
 func UpdateNoteHandler(c echo.Context) error {
 	contactIDStr := c.Param("id")
 	contactID, err := uuid.Parse(contactIDStr)
@@ -409,6 +493,16 @@ func UpdateNoteHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, note)
 }
 
+// @Summary Delete Note
+// @Description Soft delete a note.
+// @Tags notes
+// @Produce json
+// @Param id path string true "Contact UUID"
+// @Param note_id path string true "Note UUID"
+// @Success 200 {object} map[string]string "message: note deleted successfully"
+// @Failure 404 {object} map[string]string "Note not found"
+// @Security ApiKeyAuth
+// @Router /contacts/{id}/notes/{note_id} [delete]
 func DeleteNoteHandler(c echo.Context) error {
 	contactIDStr := c.Param("id")
 	contactID, err := uuid.Parse(contactIDStr)
@@ -448,6 +542,17 @@ func DeleteNoteHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]interface{}{"message": "note deleted successfully"})
 }
 
+// @Summary Update Tags
+// @Description Overwrite tags array for a contact.
+// @Tags contacts
+// @Accept json
+// @Produce json
+// @Param id path string true "Contact UUID"
+// @Param request body map[string][]string true "Tags array"
+// @Success 200 {object} models.Contact
+// @Failure 400 {object} map[string]string "Validation error"
+// @Security ApiKeyAuth
+// @Router /contacts/{id}/tags [patch]
 func UpdateTagsHandler(c echo.Context) error {
 	contactIDStr := c.Param("id")
 	contactID, err := uuid.Parse(contactIDStr)

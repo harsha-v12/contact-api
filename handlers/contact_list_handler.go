@@ -11,6 +11,20 @@ import (
 )
 
 // ListContactsHandler handles GET /api/v1/contacts with support of pagination all the things 
+// @Summary List all contacts
+// @Description Get a paginated list of contacts with optional filtering, sorting, and search.
+// @Tags contacts
+// @Accept json
+// @Produce json
+// @Param page query int false "Page number" default(1)
+// @Param limit query int false "Items per page" default(20)
+// @Param search query string false "Search across name, email, mobile"
+// @Param tags query []string false "Filter by tags (comma separated)"
+// @Success 200 {object} models.ContactListResponse
+// @Failure 400 {object} map[string]string "Invalid query parameters"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Security ApiKeyAuth
+// @Router /contacts [get]
 func ListContactsHandler(c echo.Context) error {
 	var filter models.ContactListFilter
 

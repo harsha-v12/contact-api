@@ -8,11 +8,17 @@ import (
 	"os"
 	"time"
 
+	_ "contact-management/docs" // Swagger docs
+
 	"github.com/labstack/echo/v4"
+	echoSwagger "github.com/swaggo/echo-swagger"
 )
 
 // RegisterRoutes sets up all the API routes
 func RegisterRoutes(e *echo.Echo) {
+	// Swagger UI Route
+	e.GET("/swagger/*", echoSwagger.WrapHandler)
+
 	// Root route
 	e.GET("/", func(c echo.Context) error {
 		return c.JSON(http.StatusOK, map[string]string{

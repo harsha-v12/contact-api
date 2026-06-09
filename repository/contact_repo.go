@@ -173,7 +173,7 @@ func AddContactNote(ctx context.Context, n *models.ContactNote) error {
 
 // GetContactNotes retrieves active notes for a contact
 func GetContactNotes(ctx context.Context, contactID uuid.UUID) ([]models.ContactNote, error) {
-	query := `
+	query :=`
 		SELECT id, contact_id, note, created_at, updated_at, is_deleted, version
 		FROM contact_notes FINAL
 		WHERE contact_id = ? AND is_deleted = 0

@@ -14,6 +14,14 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 )
 
+// @title Contact Management API
+// @version 1.0
+// @description Enterprise-grade API for managing contacts and async CSV imports.
+// @host localhost:8081
+// @BasePath /api/v1
+// @securityDefinitions.apikey ApiKeyAuth
+// @in header
+// @name X-API-Key
 func main() {
 	// 1. Load environment variables
 	err := godotenv.Load()

@@ -19,6 +19,16 @@ import (
 	"github.com/segmentio/kafka-go"
 )
 
+// @Summary Upload CSV File
+// @Description Asynchronously imports a batch of contacts from a CSV file.
+// @Tags import
+// @Accept multipart/form-data
+// @Produce json
+// @Param file formData file true "CSV file to upload"
+// @Success 202 {object} map[string]interface{} "message, import_id, status"
+// @Failure 400 {object} map[string]string "Validation error"
+// @Security ApiKeyAuth
+// @Router /contacts/import [post]
 func UploadImportFileHandler(c echo.Context) error {
 	file, err := c.FormFile("file")
 	if err != nil {
@@ -119,6 +129,15 @@ func countCSVRows(filePath string) (int, error) {
 	return len(records) - 1, nil
 }
 
+// @Summary Check Import Status
+// @Description Poll the current status of an async import job.
+// @Tags import
+// @Produce json
+// @Param import_id path string true "Import UUID"
+// @Success 200 {object} map[string]interface{}
+// @Failure 404 {object} map[string]string "Job not found"
+// @Security ApiKeyAuth
+// @Router /contacts/import/{import_id} [get]
 func GetImportStatusHandler(c echo.Context) error {
 	importID := c.Param("import_id")
 	

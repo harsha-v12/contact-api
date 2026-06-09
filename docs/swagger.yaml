@@ -1,0 +1,705 @@
+basePath: /api/v1
+definitions:
+  models.Contact:
+    properties:
+      city:
+        type: string
+      country:
+        type: string
+      created_at:
+        type: string
+      date_of_birth:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      gender:
+        type: string
+      id:
+        type: string
+      is_deleted:
+        type: integer
+      last_activity_at:
+        type: string
+      last_name:
+        type: string
+      mobile_number:
+        type: string
+      notes:
+        type: string
+      state:
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
+      version:
+        type: string
+    type: object
+  models.ContactActivity:
+    properties:
+      activity_type:
+        description: contact_created, note_added, email_sent, whatsapp_sent, etc.
+        type: string
+      contact_id:
+        type: string
+      created_at:
+        type: string
+      details:
+        type: string
+      id:
+        type: string
+    type: object
+  models.ContactCreateRequest:
+    properties:
+      city:
+        type: string
+      country:
+        type: string
+      date_of_birth:
+        description: 'Expected format: YYYY-MM-DD'
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      gender:
+        type: string
+      last_name:
+        type: string
+      mobile_number:
+        type: string
+      notes:
+        type: string
+      state:
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
+    required:
+    - first_name
+    type: object
+  models.ContactListItem:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      gender:
+        type: string
+      id:
+        type: string
+      last_activity_at:
+        type: string
+      last_name:
+        type: string
+      mobile_number:
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
+    type: object
+  models.ContactListResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/models.ContactListItem'
+        type: array
+      limit:
+        type: integer
+      page:
+        type: integer
+      total:
+        type: integer
+      total_pages:
+        type: integer
+    type: object
+  models.ContactNote:
+    properties:
+      contact_id:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      is_deleted:
+        type: integer
+      note:
+        type: string
+      updated_at:
+        type: string
+      version:
+        type: string
+    type: object
+  models.ContactUpdateRequest:
+    properties:
+      city:
+        type: string
+      country:
+        type: string
+      date_of_birth:
+        description: 'Expected format: YYYY-MM-DD'
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      gender:
+        type: string
+      last_name:
+        type: string
+      mobile_number:
+        type: string
+      state:
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
+    required:
+    - first_name
+    type: object
+host: localhost:8081
+info:
+  contact: {}
+  description: Enterprise-grade API for managing contacts and async CSV imports.
+  title: Contact Management API
+  version: "1.0"
+paths:
+  /contacts:
+    get:
+      consumes:
+      - application/json
+      description: Get a paginated list of contacts with optional filtering, sorting,
+        and search.
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      - description: Search across name, email, mobile
+        in: query
+        name: search
+        type: string
+      - collectionFormat: csv
+        description: Filter by tags (comma separated)
+        in: query
+        items:
+          type: string
+        name: tags
+        type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ContactListResponse'
+        "400":
+          description: Invalid query parameters
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: List all contacts
+      tags:
+      - contacts
+    post:
+      consumes:
+      - application/json
+      description: Creates a new contact with strict validation
+      parameters:
+      - description: Contact data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.ContactCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Contact'
+        "400":
+          description: Validation error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "409":
+          description: Conflict (duplicate)
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Create a Contact
+      tags:
+      - contacts
+  /contacts/{id}:
+    delete:
+      description: Soft deletes a contact, keeping it in the database but removing
+        it from active lists.
+      parameters:
+      - description: Contact UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'message: contact Deleted successfully'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Already deleted
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Contact not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Soft Delete Contact
+      tags:
+      - contacts
+    get:
+      description: View complete contact details, notes, and activity timeline.
+      parameters:
+      - description: Contact UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Contact not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Contact Profile
+      tags:
+      - contacts
+    put:
+      consumes:
+      - application/json
+      description: Update contact basic information
+      parameters:
+      - description: Contact UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Update data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.ContactUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Contact'
+        "400":
+          description: Validation error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Contact not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update Contact
+      tags:
+      - contacts
+  /contacts/{id}/activities:
+    get:
+      description: Get the activity timeline and summary for a contact.
+      parameters:
+      - description: Contact UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Contact not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Activities
+      tags:
+      - activities
+    post:
+      consumes:
+      - application/json
+      description: Manually log a new activity for a contact.
+      parameters:
+      - description: Contact UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Activity details (activity_type, details)
+        in: body
+        name: request
+        required: true
+        schema:
+          additionalProperties:
+            type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.ContactActivity'
+        "400":
+          description: Validation error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Log Activity
+      tags:
+      - activities
+  /contacts/{id}/notes:
+    get:
+      description: View all notes for a specific contact.
+      parameters:
+      - description: Contact UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.ContactNote'
+            type: array
+        "404":
+          description: Contact not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Notes
+      tags:
+      - notes
+    post:
+      consumes:
+      - application/json
+      description: Add a new note to a contact.
+      parameters:
+      - description: Contact UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Note content
+        in: body
+        name: request
+        required: true
+        schema:
+          additionalProperties:
+            type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.ContactNote'
+        "400":
+          description: Validation error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Add Note
+      tags:
+      - notes
+  /contacts/{id}/notes/{note_id}:
+    delete:
+      description: Soft delete a note.
+      parameters:
+      - description: Contact UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Note UUID
+        in: path
+        name: note_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'message: note deleted successfully'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Note not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Delete Note
+      tags:
+      - notes
+    put:
+      consumes:
+      - application/json
+      description: Edit an existing note.
+      parameters:
+      - description: Contact UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Note UUID
+        in: path
+        name: note_id
+        required: true
+        type: string
+      - description: Note content
+        in: body
+        name: request
+        required: true
+        schema:
+          additionalProperties:
+            type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ContactNote'
+        "400":
+          description: Validation error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update Note
+      tags:
+      - notes
+  /contacts/{id}/restore:
+    post:
+      description: Restores a soft-deleted contact.
+      parameters:
+      - description: Contact UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'message: contact restored successfully'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Already active
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Contact not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Restore Contact
+      tags:
+      - contacts
+  /contacts/{id}/tags:
+    patch:
+      consumes:
+      - application/json
+      description: Overwrite tags array for a contact.
+      parameters:
+      - description: Contact UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Tags array
+        in: body
+        name: request
+        required: true
+        schema:
+          additionalProperties:
+            items:
+              type: string
+            type: array
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Contact'
+        "400":
+          description: Validation error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update Tags
+      tags:
+      - contacts
+  /contacts/import:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Asynchronously imports a batch of contacts from a CSV file.
+      parameters:
+      - description: CSV file to upload
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: message, import_id, status
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Validation error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Upload CSV File
+      tags:
+      - import
+  /contacts/import/{import_id}:
+    get:
+      description: Poll the current status of an async import job.
+      parameters:
+      - description: Import UUID
+        in: path
+        name: import_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Job not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Check Import Status
+      tags:
+      - import
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: X-API-Key
+    type: apiKey
+swagger: "2.0"
