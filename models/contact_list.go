@@ -31,6 +31,7 @@ type ContactListItem struct {
 	LastName       string   `json:"last_name"`
 	Email          string   `json:"email"`
 	MobileNumber   string   `json:"mobile_number"`
+	Gender         string   `json:"gender"`
 	Tags           []string `json:"tags"`
 	CreatedAt      string   `json:"created_at"`
 	LastActivityAt string   `json:"last_activity_at"`

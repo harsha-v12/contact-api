@@ -120,7 +120,7 @@ func ListContacts(ctx context.Context, f models.ContactListFilter) ([]models.Con
 	offset := (f.Page - 1) * f.Limit
 
 	dataQuery := fmt.Sprintf(`
-		SELECT id, first_name, last_name, email, mobile_number, tags, created_at, last_activity_at
+		SELECT id, first_name, last_name, email, mobile_number, gender, tags, created_at, last_activity_at
 		FROM contacts FINAL
 		WHERE %s
 		ORDER BY %s %s
@@ -141,7 +141,7 @@ func ListContacts(ctx context.Context, f models.ContactListFilter) ([]models.Con
 		var tags []string
 		var createdAt, lastActivityAt time.Time
 
-		err := rows.Scan(&c.ID, &c.FirstName, &c.LastName, &c.Email, &c.MobileNumber, &tags, &createdAt, &lastActivityAt)
+		err := rows.Scan(&c.ID, &c.FirstName, &c.LastName, &c.Email, &c.MobileNumber, &c.Gender, &tags, &createdAt, &lastActivityAt)
 		if err != nil {
 			return nil, 0, fmt.Errorf("list contacts scan failed: %w", err)
 		}

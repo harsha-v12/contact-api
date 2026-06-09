@@ -132,24 +132,30 @@ func processImportJob(msg models.CSVImportMessage) {
 			LastName:       row[1],
 			Email:          row[2],
 			MobileNumber:   row[3],
-			Gender:         row[4],
-			// DateOfBirth parsing can be skipped or simplified, let's keep it empty or parse it
-			City:           row[6],
-			State:          row[7],
-			Country:        row[8],
 			CreatedAt:      now,
 			LastActivityAt: now,
 			Version:        now,
 			IsDeleted:      0,
 		}
 
-		if row[5] != "" {
+		if len(row) > 4 {
+			contact.Gender = row[4]
+		}
+		if len(row) > 5 && row[5] != "" {
 			if dob, err := time.Parse("2006-01-02", row[5]); err == nil {
 				contact.DateOfBirth = dob
 			}
 		}
-
-		if len(row) > 9 {
+		if len(row) > 6 {
+			contact.City = row[6]
+		}
+		if len(row) > 7 {
+			contact.State = row[7]
+		}
+		if len(row) > 8 {
+			contact.Country = row[8]
+		}
+		if len(row) > 9 && row[9] != "" {
 			contact.Tags = []string{row[9]}
 		}
 

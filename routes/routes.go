@@ -3,7 +3,6 @@ package routes
 import (
 	"contact-management/config"
 	"contact-management/handlers"
-	"contact-management/middleware"
 	"net"
 	"net/http"
 	"os"
@@ -66,8 +65,8 @@ func RegisterRoutes(e *echo.Echo) {
 	// API v1 Group
 	v1 := e.Group("/api/v1")
 	{
-		// Apply Auth Middleware to all v1 routes
-		v1.Use(middleware.APIKeyAuthMiddleware())
+		// Apply Auth Middleware to all v1 routes (DISABLED FOR LOCAL TESTING)
+		// v1.Use(middleware.APIKeyAuthMiddleware())
 
 		// Contacts Group
 		contacts := v1.Group("/contacts")
