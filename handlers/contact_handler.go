@@ -252,9 +252,13 @@ func DeleteContactHandler(c echo.Context) error {
 
 	ctx := c.Request().Context()
 
-	_, err = repository.GetContactByID(ctx, contactID)
+	contact, err := repository.GetContactByID(ctx, contactID)
 	if err != nil {
 		return c.JSON(http.StatusNotFound, map[string]interface{}{"error": "contact not found"})
+	}
+
+	if contact.IsDeleted == 1 {
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{"error": "contact is already deleted"})
 	}
 
 	now := time.Now()
@@ -274,9 +278,13 @@ func RestoreContactHandler(c echo.Context) error {
 
 	ctx := c.Request().Context()
 
-	_, err = repository.GetContactByID(ctx, contactID)
+	contact, err := repository.GetContactByID(ctx, contactID)
 	if err != nil {
 		return c.JSON(http.StatusNotFound, map[string]interface{}{"error": "contact not found"})
+	}
+
+	if contact.IsDeleted == 0{
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{"error": "Contact is already active "})
 	}
 
 	now := time.Now()
