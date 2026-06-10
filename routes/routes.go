@@ -97,7 +97,7 @@ func RegisterRoutes(e *echo.Echo) {
 			// Activity endpoints
 			contacts.POST("/:id/activities", handlers.LogActivityHandler)
 			contacts.GET("/:id/activities", handlers.GetActivitiesHandler)
-
+			
 			// CSV Import endpoints
 			contacts.POST("/import", handlers.UploadImportFileHandler)
 			contacts.GET("/import/:import_id", handlers.GetImportStatusHandler)

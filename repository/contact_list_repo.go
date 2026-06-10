@@ -44,15 +44,19 @@ func ListContacts(ctx context.Context, f models.ContactListFilter) ([]models.Con
 	args := []interface{}{}
 
 	// Partial, case-insensitive search across name / email / mobile
+	f.Search = strings.TrimSpace(f.Search)
 	if f.Search != "" {
-		searchTerm := "%" + strings.ToLower(f.Search) + "%"
 		where = append(where,
-			"(lowerUTF8(first_name) LIKE ? OR lowerUTF8(last_name) LIKE ? OR lowerUTF8(email) LIKE ? OR mobile_number LIKE ?)",
+			"(positionCaseInsensitiveUTF8(first_name, ?) > 0 OR positionCaseInsensitiveUTF8(last_name, ?) > 0 OR positionCaseInsensitiveUTF8(email, ?) > 0 OR positionCaseInsensitiveUTF8(mobile_number, ?) > 0)",
 		)
-		args = append(args, searchTerm, searchTerm, searchTerm, "%"+f.Search+"%")
+		args = append(args, f.Search, f.Search, f.Search, f.Search)
 	}
 
-	// Location filters
+	// Location & Gender filters
+	if f.Gender != "" {
+		where = append(where, "lowerUTF8(gender) = lowerUTF8(?)")
+		args = append(args, f.Gender)
+	}
 	if f.Country != "" {
 		where = append(where, "lowerUTF8(country) = lowerUTF8(?)")
 		args = append(args, f.Country)

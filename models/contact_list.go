@@ -3,25 +3,26 @@ package models
 // ContactListFilter holds all query parameters for listing, searching, and filtering contacts
 type ContactListFilter struct {
 	// Pagination:
-	Page  int `form:"page"`
-	Limit int `form:"limit"`
+	Page  int `query:"page"`
+	Limit int `query:"limit"`
 
 	// Sorting — field name and direction (asc | desc)
-	SortBy    string `form:"sort_by"`
-	SortOrder string `form:"sort_order"`
+	SortBy    string `query:"sort_by"`
+	SortOrder string `query:"sort_order"`
 
 	// Full-text search (name, email, mobile_number — partial, case-insensitive)
-	Search string `form:"search"`
+	Search string `query:"search"`
 
 	// Filters
-	Tags         []string `form:"tags"`          // filter contacts that have ANY of these tags
-	Country      string   `form:"country"`
-	State        string   `form:"state"`
-	City         string   `form:"city"`          
-	CreatedFrom  string   `form:"created_from"`  // YYYY-MM-DD
-	CreatedTo    string   `form:"created_to"`    // YYYY-MM-DD
-	ActivityFrom string   `form:"activity_from"` // last_activity_at range start
-	ActivityTo   string   `form:"activity_to"`   // last_activity_at range end
+	Gender       string   `query:"gender"`
+	Tags         []string `query:"tags"`          // filter contacts that have ANY of these tags
+	Country      string   `query:"country"`
+	State        string   `query:"state"`
+	City         string   `query:"city"`          
+	CreatedFrom  string   `query:"created_from"`  // YYYY-MM-DD
+	CreatedTo    string   `query:"created_to"`    // YYYY-MM-DD
+	ActivityFrom string   `query:"activity_from"` // last_activity_at range start
+	ActivityTo   string   `query:"activity_to"`   // last_activity_at range end
 }
 
 // ContactListItem is the lightweight row returned in a contact listing

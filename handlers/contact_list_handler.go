@@ -19,7 +19,13 @@ import (
 // @Param page query int false "Page number" default(1)
 // @Param limit query int false "Items per page" default(20)
 // @Param search query string false "Search across name, email, mobile"
-// @Param tags query []string false "Filter by tags (comma separated)"
+// @Param gender query string false "Filter by gender (e.g., male, female)"
+// @Param tags query []string false "Filter by tags (e.g., VIP)"
+// @Param city query string false "Filter by city"
+// @Param state query string false "Filter by state"
+// @Param country query string false "Filter by country"
+// @Param created_from query string false "Filter by creation date from (YYYY-MM-DD)"
+// @Param created_to query string false "Filter by creation date to (YYYY-MM-DD)"
 // @Success 200 {object} models.ContactListResponse
 // @Failure 400 {object} map[string]string "Invalid query parameters"
 // @Failure 500 {object} map[string]string "Internal server error"

@@ -55,13 +55,49 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "type": "string",
+                        "description": "Filter by gender (e.g., male, female)",
+                        "name": "gender",
+                        "in": "query"
+                    },
+                    {
                         "type": "array",
                         "items": {
                             "type": "string"
                         },
                         "collectionFormat": "csv",
-                        "description": "Filter by tags (comma separated)",
+                        "description": "Filter by tags (e.g., VIP)",
                         "name": "tags",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by city",
+                        "name": "city",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by state",
+                        "name": "state",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by country",
+                        "name": "country",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by creation date from (YYYY-MM-DD)",
+                        "name": "created_from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by creation date to (YYYY-MM-DD)",
+                        "name": "created_to",
                         "in": "query"
                     }
                 ],
@@ -861,9 +897,6 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
-                "is_deleted": {
-                    "type": "integer"
-                },
                 "last_activity_at": {
                     "type": "string"
                 },
@@ -1025,9 +1058,6 @@ const docTemplate = `{
                 },
                 "id": {
                     "type": "string"
-                },
-                "is_deleted": {
-                    "type": "integer"
                 },
                 "note": {
                     "type": "string"

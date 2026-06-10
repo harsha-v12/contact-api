@@ -18,8 +18,6 @@ definitions:
         type: string
       id:
         type: string
-      is_deleted:
-        type: integer
       last_activity_at:
         type: string
       last_name:
@@ -127,8 +125,6 @@ definitions:
         type: string
       id:
         type: string
-      is_deleted:
-        type: integer
       note:
         type: string
       updated_at:
@@ -192,13 +188,37 @@ paths:
         in: query
         name: search
         type: string
+      - description: Filter by gender (e.g., male, female)
+        in: query
+        name: gender
+        type: string
       - collectionFormat: csv
-        description: Filter by tags (comma separated)
+        description: Filter by tags (e.g., VIP)
         in: query
         items:
           type: string
         name: tags
         type: array
+      - description: Filter by city
+        in: query
+        name: city
+        type: string
+      - description: Filter by state
+        in: query
+        name: state
+        type: string
+      - description: Filter by country
+        in: query
+        name: country
+        type: string
+      - description: Filter by creation date from (YYYY-MM-DD)
+        in: query
+        name: created_from
+        type: string
+      - description: Filter by creation date to (YYYY-MM-DD)
+        in: query
+        name: created_to
+        type: string
       produces:
       - application/json
       responses:

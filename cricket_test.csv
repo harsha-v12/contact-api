@@ -1,0 +1,7 @@
+First Name, Last Name  , Email           , Mobile Number, Gender, Date of Birth, City   , State      , Country, Tags
+Virat     , Kohli      , virat@test.com  , +919876543001, male  , 1988-11-05   , Delhi  , Delhi      , India  , "VIP,Customer"
+Rohit     , Sharma     , rohit@test.com  , +919876543002, male  , 1987-04-30   , Mumbai , Maharashtra, India  , VIP
+Smriti    , Mandhana   , smriti@test.com , +919876543003, female, 1996-07-18   , Mumbai , Maharashtra, India  , "Customer,Lead"
+Mithali   , Raj        , mithali@test.com, +919876543004, female, 1982-12-03   , Jodhpur, Rajasthan  , India  , Prospect
+          , NoFirstName, bad1@test.com   , +919876543005, male  , 1990-01-01   , Pune   , Maharashtra, India  , VIP
+BadPhone  , User       , bad2@test.com   , +9112345     , female, 1990-01-01   , Pune   , Maharashtra, India  , Customer

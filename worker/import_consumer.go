@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	"contact-management/models"
@@ -69,6 +70,8 @@ func processImportJob(msg models.CSVImportMessage) {
 	defer f.Close()
 
 	reader := csv.NewReader(f)
+	reader.FieldsPerRecord = -1 // Allow variable number of fields per row
+	reader.LazyQuotes = true    // Be forgiving with quotes
 	records, err := reader.ReadAll()
 	if err != nil {
 		services.UpdateImportProgress(ctx, msg.ImportID, 0, 0, 0, "failed")
@@ -97,9 +100,10 @@ func processImportJob(msg models.CSVImportMessage) {
 		}
 		// added for the checking the given data is correct format or not 
 
-		firstName := row[0]
-		email := row[2]
-		mobileNumber := row[3]
+		// Sanitize data by trimming any accidental spaces from the CSV
+		firstName := strings.TrimSpace(row[0])
+		email := strings.TrimSpace(row[2])
+		mobileNumber := strings.TrimSpace(row[3])
 
 		if firstName == "" {
 			log.Printf("[Worker] Skipping row %d: First Name is empty", i)
@@ -128,10 +132,10 @@ func processImportJob(msg models.CSVImportMessage) {
 		now := time.Now()
 		contact := models.Contact{
 			ID:             uuid.New(),
-			FirstName:      row[0],
-			LastName:       row[1],
-			Email:          row[2],
-			MobileNumber:   row[3],
+			FirstName:      firstName,
+			LastName:       strings.TrimSpace(row[1]),
+			Email:          email,
+			MobileNumber:   mobileNumber,
 			CreatedAt:      now,
 			LastActivityAt: now,
 			Version:        now,
@@ -156,7 +160,12 @@ func processImportJob(msg models.CSVImportMessage) {
 			contact.Country = row[8]
 		}
 		if len(row) > 9 && row[9] != "" {
-			contact.Tags = []string{row[9]}
+			// Split by comma in case they provided multiple tags like "VIP,Customer"
+			tags := strings.Split(row[9], ",")
+			for i, t := range tags {
+				tags[i] = strings.TrimSpace(t)
+			}
+			contact.Tags = tags
 		}
 
 		isDuplicate, err := repository.CheckDuplicate(ctx, contact.Email, contact.MobileNumber, nil)

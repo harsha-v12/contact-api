@@ -10,7 +10,7 @@ import (
 
 var (
 	EmailRegex  = regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
-	MobileRegex = regexp.MustCompile(`^\+?[1-9]\d{9,14}$`) 
+	MobileRegex = regexp.MustCompile(`^(?:\+91)?[6-9]\d{9}$`) 
 )
 
 // Contact represents the ClickHouse contact schema structure
@@ -29,7 +29,7 @@ type Contact struct {
 	Notes          string    `json:"notes"`
 	CreatedAt      time.Time `json:"created_at"`
 	LastActivityAt time.Time `json:"last_activity_at"`
-	IsDeleted      uint8     `json:"is_deleted"`
+	IsDeleted      uint8     `json:"-"`
 	Version        time.Time `json:"version"`
 }
 
@@ -40,7 +40,7 @@ type ContactNote struct {
 	Note      string    `json:"note"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
-	IsDeleted uint8     `json:"is_deleted"`
+	IsDeleted uint8     `json:"-"`
 	Version   time.Time `json:"version"`
 }
 
@@ -83,7 +83,7 @@ func (r *ContactCreateRequest) Validate() error {
 	}
 
 	if r.MobileNumber != "" && !MobileRegex.MatchString(r.MobileNumber) {
-		return fmt.Errorf("mobile_number format is invalid (should be numeric, 10-15 digits, optional + prefix)")
+		return fmt.Errorf("mobile_number format is invalid (must be a valid 10-digit Indian number, optionally starting with +91)")
 	}
 
 	if r.DateOfBirth != "" {
@@ -112,20 +112,14 @@ type ContactUpdateRequest struct {
 
 // Validate checks update requirements
 func (r *ContactUpdateRequest) Validate() error {
-	if r.FirstName == "" {
-		return fmt.Errorf("first_name is mandatory")
-	}
-
-	if r.Email == "" && r.MobileNumber == "" {
-		return fmt.Errorf("either email or mobile_number must be provided")
-	}
+	// All fields are optional for partial updates. We only validate formats if they are provided.
 
 	if r.Email != "" && !EmailRegex.MatchString(r.Email) {
 		return fmt.Errorf("email format is invalid")
 	}
 
 	if r.MobileNumber != "" && !MobileRegex.MatchString(r.MobileNumber) {
-		return fmt.Errorf("mobile_number format is invalid (should be numeric, 10-15 digits, optional + prefix)")
+		return fmt.Errorf("mobile_number format is invalid (must be a valid 10-digit Indian number, optionally starting with +91)")
 	}
 
 	if r.DateOfBirth != "" {

@@ -1,6 +1,6 @@
-first_name,last_name,email,mobile_number,gender,date_of_birth,city,state,country,tags
-Alice,Smith,alice999.smith@example.com,+919999999991,female,1992-03-20,Delhi,Delhi,India,"Customer,VIP"
-Bob,Jones,bob999.jones@example.com,+919999999992,male,1988-07-10,Bangalore,Karnataka,India,Prospect
-Carol,White,carol999.white@example.com,+919999999993,female,1995-11-25,Chennai,Tamil Nadu,India,Customer
-David,Brown,david999.brown@example.com,+919999999994,male,1990-05-15,Mumbai,Maharashtra,India,"Lead,VIP"
-Eve,Davis,eve999.davis@example.com,+919999999995,female,1993-08-30,Pune,Maharashtra,India,Prospect
+first_name, last_name, email                     , mobile_number, gender, date_of_birth, city     , state      , country, tags
+Alice     , Smith    , alice999.smith@example.com, +919999999991, female, 1992-03-20   , Delhi    , Delhi      , India  , "Customer,VIP"
+Bob       , Jones    , bob999.jones@example.com  , +919999999992, male  , 1988-07-10   , Bangalore, Karnataka  , India  , Prospect
+Carol     , White    , carol999.white@example.com, +919999999993, female, 1995-11-25   , Chennai  , Tamil Nadu , India  , Customer
+David     , Brown    , david999.brown@example.com, +919999999994, male  , 1990-05-15   , Mumbai   , Maharashtra, India  , "Lead,VIP"
+Eve       , Davis    , eve999.davis@example.com  , +919999999995, female, 1993-08-30   , Pune     , Maharashtra, India  , Prospect

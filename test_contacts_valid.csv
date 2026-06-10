@@ -1,7 +1,7 @@
-first_name,last_name,email,mobile_number,gender,date_of_birth,city,state,country,tags
-Tony,Stark,tony@starkindustries.com,+19998887777,Male,1970-05-29,New York,NY,USA,VIP
-Bruce,Wayne,bruce@wayneenterprises.com,+18887776666,Male,1972-02-19,Gotham,NJ,USA,VIP
-Diana,Prince,diana@themyscira.gov,+17776665555,Female,1985-03-22,Washington,DC,USA,Customer
-Peter,Parker,peter@dailybugle.com,+16665554444,Male,2001-08-10,Queens,NY,USA,Prospect
-Clark,Kent,clark@dailyplanet.com,,Male,1980-06-18,Metropolis,KS,USA,Lead
-Natasha,Romanoff,,+14443332222,Female,1984-11-22,Stalingrad,Volgograd,Russia,VIP
+first_name, last_name, email                     , mobile_number, gender, date_of_birth, city      , state    , country, tags
+Tony      , Stark    , tony@starkindustries.com  , +19998887777 , Male  , 1970-05-29   , New York  , NY       , USA    , VIP
+Bruce     , Wayne    , bruce@wayneenterprises.com, +18887776666 , Male  , 1972-02-19   , Gotham    , NJ       , USA    , VIP
+Diana     , Prince   , diana@themyscira.gov      , +17776665555 , Female, 1985-03-22   , Washington, DC       , USA    , Customer
+Peter     , Parker   , peter@dailybugle.com      , +16665554444 , Male  , 2001-08-10   , Queens    , NY       , USA    , Prospect
+Clark     , Kent     , clark@dailyplanet.com     ,              , Male  , 1980-06-18   , Metropolis, KS       , USA    , Lead
+Natasha   , Romanoff ,                           , +14443332222 , Female, 1984-11-22   , Stalingrad, Volgograd, Russia , VIP

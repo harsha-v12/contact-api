@@ -117,6 +117,8 @@ func countCSVRows(filePath string) (int, error) {
 	defer f.Close()
 
 	reader := csv.NewReader(f)
+	reader.FieldsPerRecord = -1 // Allow variable number of fields per row
+	reader.LazyQuotes = true    // Be forgiving with quotes
 	records, err := reader.ReadAll()
 	if err != nil {
 		return 0, err

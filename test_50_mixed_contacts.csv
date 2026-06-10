@@ -1,0 +1,51 @@
+First Name   , Last Name  , Email          , Mobile Number, Gender, Date of Birth, City       , State         , Country    , Tags
+Valid1       , User       , v1@test.com    , +919876500101, male  , 1990-01-01   , Mumbai     , Maharashtra   , India      , "VIP"
+Valid2       , User       , v2@test.com    , +919876500102, female, 1992-02-02   , Delhi      , Delhi         , India      , "Customer"
+Valid3       , User       , v3@test.com    , +919876500103, male  , 1985-03-03   , Bangalore  , Karnataka     , India      , "Prospect"
+Valid4       , User       , v4@test.com    , +919876500104, female, 1988-04-04   , Hyderabad  , Telangana     , India      , "Lead"
+Valid5       , User       , v5@test.com    , +919876500105, male  , 1995-05-05   , Chennai    , Tamil Nadu    , India      , "VIP"
+Valid6       , User       , v6@test.com    , +919876500106, female, 1991-06-06   , Kolkata    , West Bengal   , India      , "Customer"
+Valid7       , User       , v7@test.com    , +919876500107, male  , 1989-07-07   , Pune       , Maharashtra   , India      , "Prospect"
+Valid8       , User       , v8@test.com    , +919876500108, female, 1994-08-08   , Ahmedabad  , Gujarat       , India      , "Lead"
+Valid9       , User       , v9@test.com    , +919876500109, male  , 1993-09-09   , Jaipur     , Rajasthan     , India      , "VIP"
+Valid10      , User       , v10@test.com   , +919876500110, female, 1987-10-10   , Lucknow    , Uttar Pradesh , India      , "Customer"
+Valid11      , User       , v11@test.com   , +919876500111, male  , 1990-11-11   , Chandigarh , Punjab        , India      , "Prospect"
+Valid12      , User       , v12@test.com   , +919876500112, female, 1992-12-12   , Bhopal     , Madhya Pradesh, India      , "Lead"
+Valid13      , User       , v13@test.com   , +919876500113, male  , 1986-01-13   , Patna      , Bihar         , India      , "VIP"
+Valid14      , User       , v14@test.com   , +919876500114, female, 1989-02-14   , Indore     , Madhya Pradesh, India      , "Customer"
+Valid15      , User       , v15@test.com   , +919876500115, male  , 1996-03-15   , Vadodara   , Gujarat       , India      , "Prospect"
+Valid16      , User       , v16@test.com   , +919876500116, female, 1998-04-16   , Nagpur     , Maharashtra   , India      , "Lead"
+Valid17      , User       , v17@test.com   , +919876500117, male  , 1984-05-17   , Agra       , Uttar Pradesh , India      , "VIP"
+Valid18      , User       , v18@test.com   , +919876500118, female, 1991-06-18   , Nashik     , Maharashtra   , India      , "Customer"
+Valid19      , User       , v19@test.com   , +919876500119, male  , 1988-07-19   , Faridabad  , Haryana       , India      , "Prospect"
+Valid20      , User       , v20@test.com   , +919876500120, female, 1995-08-20   , Meerut     , Uttar Pradesh , India      , "Lead"
+Valid21      , User       , v21@test.com   , +919876500121, male  , 1990-09-21   , Rajkot     , Gujarat       , India      , "VIP"
+Valid22      , User       , v22@test.com   , +919876500122, female, 1993-10-22   , Varanasi   , Uttar Pradesh , India      , "Customer"
+Valid23      , User       , v23@test.com   , +919876500123, male  , 1985-11-23   , Srinagar   , Jammu         , India      , "Prospect"
+Valid24      , User       , v24@test.com   , +919876500124, female, 1992-12-24   , Amritsar   , Punjab        , India      , "Lead"
+Valid25      , User       , v25@test.com   , +919876500125, male  , 1987-01-25   , Allahabad  , Uttar Pradesh , India      , "VIP"
+Valid26      , User       , v26@test.com   , +919876500126, female, 1994-02-26   , Ranchi     , Jharkhand     , India      , "Customer"
+Valid27      , User       , v27@test.com   , +919876500127, male  , 1989-03-27   , Guwahati   , Assam         , India      , "Prospect"
+Valid28      , User       , v28@test.com   , +919876500128, female, 1991-04-28   , Bhubaneswar, Odisha        , India      , "Lead"
+Valid29      , User       , v29@test.com   , +919876500129, male  , 1996-05-29   , Raipur     , Chhattisgarh  , India      , "VIP"
+Valid30      , User       , v30@test.com   , +919876500130, female, 1986-06-30   , Dehradun   , Uttarakhand   , India      , "Customer"
+Valid31      , User       , v31@test.com   , +919876500131, male  , 1990-07-01   , Kochi      , Kerala        , India      , "Prospect"
+Valid32      , User       , v32@test.com   , +919876500132, female, 1993-08-02   , Trivandrum , Kerala        , India      , "Lead"
+Valid33      , User       , v33@test.com   , +919876500133, male  , 1985-09-03   , Mysore     , Karnataka     , India      , "VIP"
+Valid34      , User       , v34@test.com   , +919876500134, female, 1995-10-04   , Mangalore  , Karnataka     , India      , "Customer"
+Valid35      , User       , v35@test.com   , +919876500135, male  , 1988-11-05   , Hubli      , Karnataka     , India      , "Prospect"
+             , MissingName, fail1@test.com , +919876500136, male  , 1990-01-01   , Mumbai     , Maharashtra   , India      , VIP
+             , MissingName, fail2@test.com , +919876500137, female, 1990-01-01   , Mumbai     , Maharashtra   , India      , VIP
+             , MissingName, fail3@test.com , +919876500138, male  , 1990-01-01   , Mumbai     , Maharashtra   , India      , VIP
+             , MissingName, fail4@test.com , +919876500139, female, 1990-01-01   , Mumbai     , Maharashtra   , India      , VIP
+             , MissingName, fail5@test.com , +919876500140, male  , 1990-01-01   , Mumbai     , Maharashtra   , India      , VIP
+BadEmail1    , User       , bademail1.com  , +919876500141, male  , 1990-01-01   , Mumbai     , Maharashtra   , India      , VIP
+BadEmail2    , User       , bademail2.com  , +919876500142, female, 1990-01-01   , Mumbai     , Maharashtra   , India      , VIP
+BadEmail3    , User       , bademail3.com  , +919876500143, male  , 1990-01-01   , Mumbai     , Maharashtra   , India      , VIP
+BadEmail4    , User       , bademail4.com  , +919876500144, female, 1990-01-01   , Mumbai     , Maharashtra   , India      , VIP
+BadEmail5    , User       , bademail5.com  , +919876500145, male  , 1990-01-01   , Mumbai     , Maharashtra   , India      , VIP
+BadPhone1    , User       , fail16@test.com, +9112345     , male  , 1990-01-01   , Mumbai     , Maharashtra   , India      , VIP
+BadPhone2    , User       , fail17@test.com, +9112345     , female, 1990-01-01   , Mumbai     , Maharashtra   , India      , VIP
+BadPhone3    , User       , fail18@test.com, +9112345     , male  , 1990-01-01   , Mumbai     , Maharashtra   , India      , VIP
+BadPhone4    , User       , fail19@test.com, +9112345     , female, 1990-01-01   , Mumbai     , Maharashtra   , India      , VIP
+NoContactInfo, User       ,                ,              ,       , male         , 1990-01-01 , Mumbai        , Maharashtra, India     , VIP

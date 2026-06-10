@@ -1,0 +1,51 @@
+First Name, Last Name   , Email             , Mobile Number, Gender, Date of Birth, City       , State         , Country, Tags
+Aarav     , Patel       , aarav01@test.com  , +919876500001, male  , 1990-01-01   , Mumbai     , Maharashtra   , India  , "VIP,Customer"
+Aditi     , Sharma      , aditi02@test.com  , +919876500002, female, 1992-02-02   , Delhi      , Delhi         , India  , Customer
+Vihaan    , Singh       , vihaan03@test.com , +919876500003, male  , 1985-03-03   , Bangalore  , Karnataka     , India  , Prospect
+Ananya    , Kumar       , ananya04@test.com , +919876500004, female, 1988-04-04   , Hyderabad  , Telangana     , India  , "Lead,VIP"
+Krishna   , Reddy       , krishna05@test.com, +919876500005, male  , 1995-05-05   , Chennai    , Tamil Nadu    , India  , Customer
+Diya      , Das         , diya06@test.com   , +919876500006, female, 1991-06-06   , Kolkata    , West Bengal   , India  , Prospect
+Arjun     , Nair        , arjun07@test.com  , +919876500007, male  , 1989-07-07   , Pune       , Maharashtra   , India  , Customer
+Sanya     , Iyer        , sanya08@test.com  , +919876500008, female, 1994-08-08   , Ahmedabad  , Gujarat       , India  , "VIP,Prospect"
+Rohan     , Gupta       , rohan09@test.com  , +919876500009, male  , 1993-09-09   , Jaipur     , Rajasthan     , India  , Lead
+Meera     , Joshi       , meera10@test.com  , +919876500010, female, 1987-10-10   , Lucknow    , Uttar Pradesh , India  , Customer
+Kabir     , Menon       , kabir11@test.com  , +919876500011, male  , 1990-11-11   , Chandigarh , Punjab        , India  , Prospect
+Riya      , Bose        , riya12@test.com   , +919876500012, female, 1992-12-12   , Bhopal     , Madhya Pradesh, India  , "VIP,Customer"
+Shaurya   , Verma       , shaurya13@test.com, +919876500013, male  , 1986-01-13   , Patna      , Bihar         , India  , Lead
+Kavya     , Rao         , kavya14@test.com  , +919876500014, female, 1989-02-14   , Indore     , Madhya Pradesh, India  , Customer
+Atharv    , Desai       , atharv15@test.com , +919876500015, male  , 1996-03-15   , Vadodara   , Gujarat       , India  , Prospect
+Zara      , Pandey      , zara16@test.com   , +919876500016, female, 1998-04-16   , Nagpur     , Maharashtra   , India  , "VIP,Lead"
+Vivaan    , Chawla      , vivaan17@test.com , +919876500017, male  , 1984-05-17   , Agra       , Uttar Pradesh , India  , Customer
+Isha      , Kapoor      , isha18@test.com   , +919876500018, female, 1991-06-18   , Nashik     , Maharashtra   , India  , Prospect
+Dev       , Malhotra    , dev19@test.com    , +919876500019, male  , 1988-07-19   , Faridabad  , Haryana       , India  , Lead
+Pari      , Ahluwalia   , pari20@test.com   , +919876500020, female, 1995-08-20   , Meerut     , Uttar Pradesh , India  , "VIP,Customer"
+Ayaan     , Mehta       , ayaan21@test.com  , +919876500021, male  , 1990-09-21   , Rajkot     , Gujarat       , India  , Prospect
+Myra      , Bhat        , myra22@test.com   , +919876500022, female, 1993-10-22   , Varanasi   , Uttar Pradesh , India  , Lead
+Reyansh   , Kaur        , reyansh23@test.com, +919876500023, male  , 1985-11-23   , Srinagar   , Jammu         , India  , Customer
+Avni      , Pillai      , avni24@test.com   , +919876500024, female, 1992-12-24   , Amritsar   , Punjab        , India  , "VIP,Prospect"
+Dhruv     , Saxena      , dhruv25@test.com  , +919876500025, male  , 1987-01-25   , Allahabad  , Uttar Pradesh , India  , Lead
+Kiara     , Chatterjee  , kiara26@test.com  , +919876500026, female, 1994-02-26   , Ranchi     , Jharkhand     , India  , Customer
+Rudra     , Choudhury   , rudra27@test.com  , +919876500027, male  , 1989-03-27   , Guwahati   , Assam         , India  , Prospect
+Navya     , Dutta       , navya28@test.com  , +919876500028, female, 1991-04-28   , Bhubaneswar, Odisha        , India  , "VIP,Lead"
+Kian      , Ghosh       , kian29@test.com   , +919876500029, male  , 1996-05-29   , Raipur     , Chhattisgarh  , India  , Customer
+Suhana    , Sinha       , suhana30@test.com , +919876500030, female, 1986-06-30   , Dehradun   , Uttarakhand   , India  , Prospect
+Ishaan    , Bhattacharya, ishaan31@test.com , +919876500031, male  , 1990-07-01   , Kochi      , Kerala        , India  , Lead
+Anika     , Mukherjee   , anika32@test.com  , +919876500032, female, 1993-08-02   , Trivandrum , Kerala        , India  , "VIP,Customer"
+Shlok     , Dasgupta    , shlok33@test.com  , +919876500033, male  , 1985-09-03   , Mysore     , Karnataka     , India  , Prospect
+Mira      , Banerjee    , mira34@test.com   , +919876500034, female, 1995-10-04   , Mangalore  , Karnataka     , India  , Lead
+Omer      , Ali         , omer35@test.com   , +919876500035, male  , 1988-11-05   , Hubli      , Karnataka     , India  , Customer
+Naina     , Khan        , naina36@test.com  , +919876500036, female, 1992-12-06   , Guntur     , Andhra Pradesh, India  , "VIP,Prospect"
+Aarush    , Shaikh      , aarush37@test.com , +919876500037, male  , 1987-01-07   , Vijayawada , Andhra Pradesh, India  , Lead
+Tara      , Sayyed      , tara38@test.com   , +919876500038, female, 1990-02-08   , Rajamundry , Andhra Pradesh, India  , Customer
+Zayn      , Ansari      , zayn39@test.com   , +919876500039, male  , 1994-03-09   , Warangal   , Telangana     , India  , Prospect
+Sana      , Qureshi     , sana40@test.com   , +919876500040, female, 1986-04-10   , Nizamabad  , Telangana     , India  , "VIP,Lead"
+Aryan     , Mishra      , aryan41@test.com  , +919876500041, male  , 1991-05-11   , Jodhpur    , Rajasthan     , India  , Customer
+Trisha    , Tiwari      , trisha42@test.com , +919876500042, female, 1996-06-12   , Udaipur    , Rajasthan     , India  , Prospect
+Pranav    , Pandey      , pranav43@test.com , +919876500043, male  , 1989-07-13   , Kota       , Rajasthan     , India  , Lead
+Rhea      , Yadav       , rhea44@test.com   , +919876500044, female, 1993-08-14   , Jalandhar  , Punjab        , India  , "VIP,Customer"
+Vedant    , Singh       , vedant45@test.com , +919876500045, male  , 1985-09-15   , Ludhiana   , Punjab        , India  , Prospect
+Sara      , Rajput      , sara46@test.com   , +919876500046, female, 1995-10-16   , Patiala    , Punjab        , India  , Lead
+Rishabh   , Chauhan     , rishabh47@test.com, +919876500047, male  , 1988-11-17   , Rohtak     , Haryana       , India  , Customer
+Ananya    , Thakur      , ananya48@test.com , +919876500048, female, 1992-12-18   , Panipat    , Haryana       , India  , "VIP,Prospect"
+Ayaan     , Jain        , ayaan49@test.com  , +919876500049, male  , 1987-01-19   , Karnal     , Haryana       , India  , Lead
+Navya     , Agarwal     , navya50@test.com  , +919876500050, female, 1990-02-20   , Hisar      , Haryana       , India  , Customer
