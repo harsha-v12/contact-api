@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 
 	"contact-management/config"
 	"contact-management/models"
@@ -74,7 +75,11 @@ func UploadImportFileHandler(c echo.Context) error {
 	}
 
 	totalRecords, err := countCSVRows(filePath)
-	if err != nil || totalRecords == 0 {
+	if err != nil {
+		os.Remove(filePath)
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{"error": err.Error()})
+	}
+	if totalRecords == 0 {
 		os.Remove(filePath)
 		return c.JSON(http.StatusBadRequest, map[string]interface{}{"error": "invalid or empty CSV file"})
 	}
@@ -126,6 +131,18 @@ func countCSVRows(filePath string) (int, error) {
 
 	if len(records) <= 1 {
 		return 0, nil
+	}
+
+	header := records[0]
+	hasEmail := false
+	for _, col := range header {
+		if strings.Contains(strings.ToLower(col), "email") {
+			hasEmail = true
+			break
+		}
+	}
+	if !hasEmail {
+		return 0, fmt.Errorf("missing 'Email' column in header row")
 	}
 
 	return len(records) - 1, nil
