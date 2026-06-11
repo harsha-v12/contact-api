@@ -142,7 +142,7 @@ func countCSVRows(filePath string) (int, error) {
 		}
 	}
 	if !hasEmail {
-		return 0, fmt.Errorf("missing 'Email' column in header row")
+		return 0, fmt.Errorf("csv doesn't contain email format")
 	}
 
 	return len(records) - 1, nil

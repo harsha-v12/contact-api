@@ -1,7 +1,6 @@
 package models
 
 import (
-	"fmt"
 	"regexp"
 	"time"
 
@@ -68,32 +67,34 @@ type ContactCreateRequest struct {
 	Notes        string   `json:"notes"`
 }
 
-// Validate checks creation requirements and formats
-func (r *ContactCreateRequest) Validate() error {
+// Validate checks creation requirements and formats and returns all errors
+func (r *ContactCreateRequest) Validate() map[string]string {
+	errors := make(map[string]string)
+
 	if r.FirstName == "" {
-		return fmt.Errorf("first_name is mandatory")
+		errors["first_name"] = "first_name is mandatory"
 	}
 
 	if r.Email == "" && r.MobileNumber == "" {
-		return fmt.Errorf("either email or mobile_number must be provided")
+		errors["contact_info"] = "either email or mobile_number must be provided"
 	}
 
 	if r.Email != "" && !EmailRegex.MatchString(r.Email) {
-		return fmt.Errorf("email format is invalid")
+		errors["email"] = "email format is invalid"
 	}
 
 	if r.MobileNumber != "" && !MobileRegex.MatchString(r.MobileNumber) {
-		return fmt.Errorf("mobile_number format is invalid (must be a valid 10-digit Indian number, optionally starting with +91)")
+		errors["mobile_number"] = "mobile_number format is invalid (must be a valid 10-digit Indian number, optionally starting with +91)"
 	}
 
 	if r.DateOfBirth != "" {
 		_, err := time.Parse("2006-01-02", r.DateOfBirth)
 		if err != nil {
-			return fmt.Errorf("date_of_birth format is invalid (expected YYYY-MM-DD)")
+			errors["date_of_birth"] = "date_of_birth format is invalid (expected YYYY-MM-DD)"
 		}
 	}
 
-	return nil
+	return errors
 }
 
 // ContactUpdateRequest is the payload for updating a contact
@@ -110,24 +111,25 @@ type ContactUpdateRequest struct {
 	Tags         []string `json:"tags"`
 }
 
-// Validate checks update requirements
-func (r *ContactUpdateRequest) Validate() error {
+// Validate checks update requirements and returns all errors
+func (r *ContactUpdateRequest) Validate() map[string]string {
 	// All fields are optional for partial updates. We only validate formats if they are provided.
+	errors := make(map[string]string)
 
 	if r.Email != "" && !EmailRegex.MatchString(r.Email) {
-		return fmt.Errorf("email format is invalid")
+		errors["email"] = "email format is invalid"
 	}
 
 	if r.MobileNumber != "" && !MobileRegex.MatchString(r.MobileNumber) {
-		return fmt.Errorf("mobile_number format is invalid (must be a valid 10-digit Indian number, optionally starting with +91)")
+		errors["mobile_number"] = "mobile_number format is invalid (must be a valid 10-digit Indian number, optionally starting with +91)"
 	}
 
 	if r.DateOfBirth != "" {
 		_, err := time.Parse("2006-01-02", r.DateOfBirth)
 		if err != nil {
-			return fmt.Errorf("date_of_birth format is invalid (expected YYYY-MM-DD)")
+			errors["date_of_birth"] = "date_of_birth format is invalid (expected YYYY-MM-DD)"
 		}
 	}
 
-	return nil
+	return errors
 }

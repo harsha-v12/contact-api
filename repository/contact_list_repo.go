@@ -47,9 +47,9 @@ func ListContacts(ctx context.Context, f models.ContactListFilter) ([]models.Con
 	f.Search = strings.TrimSpace(f.Search)
 	if f.Search != "" {
 		where = append(where,
-			"(positionCaseInsensitiveUTF8(first_name, ?) > 0 OR positionCaseInsensitiveUTF8(last_name, ?) > 0 OR positionCaseInsensitiveUTF8(email, ?) > 0 OR positionCaseInsensitiveUTF8(mobile_number, ?) > 0)",
+			"(positionCaseInsensitiveUTF8(first_name, ?) > 0 OR positionCaseInsensitiveUTF8(last_name, ?) > 0 OR positionCaseInsensitiveUTF8(email, ?) > 0 OR positionCaseInsensitiveUTF8(mobile_number, ?) > 0 OR positionCaseInsensitiveUTF8(concat(first_name, ' ', last_name), ?) > 0)",
 		)
-		args = append(args, f.Search, f.Search, f.Search, f.Search)
+		args = append(args, f.Search, f.Search, f.Search, f.Search, f.Search)
 	}
 
 	// Location & Gender filters
@@ -58,15 +58,15 @@ func ListContacts(ctx context.Context, f models.ContactListFilter) ([]models.Con
 		args = append(args, f.Gender)
 	}
 	if f.Country != "" {
-		where = append(where, "lowerUTF8(country) = lowerUTF8(?)")
+		where = append(where, "positionCaseInsensitiveUTF8(country, ?) > 0")
 		args = append(args, f.Country)
 	}
 	if f.State != "" {
-		where = append(where, "lowerUTF8(state) = lowerUTF8(?)")
+		where = append(where, "positionCaseInsensitiveUTF8(state, ?) > 0")
 		args = append(args, f.State)
 	}
 	if f.City != "" {
-		where = append(where, "lowerUTF8(city) = lowerUTF8(?)")
+		where = append(where, "positionCaseInsensitiveUTF8(city, ?) > 0")
 		args = append(args, f.City)
 	}
 
@@ -113,7 +113,7 @@ func ListContacts(ctx context.Context, f models.ContactListFilter) ([]models.Con
 
 	whereClause := strings.Join(where, " AND ")
 
-	// ── Count total matching rows ─────────────────────────────────────────────
+	// Count total matching rows 
 	countQuery := fmt.Sprintf(`SELECT count() FROM contacts FINAL WHERE %s`, whereClause)
 	var total uint64
 	if err := config.DB.QueryRow(ctx, countQuery, args...).Scan(&total); err != nil {

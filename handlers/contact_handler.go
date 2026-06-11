@@ -28,8 +28,8 @@ func CreateContactHandler(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]interface{}{"error": err.Error()})
 	}
 
-	if err := req.Validate(); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]interface{}{"error": err.Error()})
+	if errs := req.Validate(); len(errs) > 0 {
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{"errors": errs})
 	}
 
 	ctx := c.Request().Context()
@@ -229,8 +229,8 @@ func UpdateContactHandler(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]interface{}{"error": err.Error()})
 	}
 
-	if err := req.Validate(); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]interface{}{"error": err.Error()})
+	if errs := req.Validate(); len(errs) > 0 {
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{"errors": errs})
 	}
 
 	ctx := c.Request().Context()

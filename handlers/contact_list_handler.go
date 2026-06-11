@@ -1,14 +1,20 @@
 package handlers
 
 import (
+	"encoding/json"
+	"log"
 	"math"
 	"net/http"
+	"time"
+
+	"contact-management/config"
 
 	"contact-management/models"
 	"contact-management/repository"
 
 	"github.com/labstack/echo/v4"
 )
+//2026/06/11 11:30:28 REQUEST: GET /api/v1/contacts?page=1&limit=5&search=a&status=Male&city=Guntur&state=Andhra+Pradesh&country=India | STATUS: 200
 
 // ListContactsHandler handles GET /api/v1/contacts with support of pagination all the things 
 // @Summary List all contacts
@@ -41,6 +47,25 @@ func ListContactsHandler(c echo.Context) error {
 
 	ctx := c.Request().Context()
 
+
+	// 1. SMART REDIS CACHE (Only cache the default view!)
+	
+	isDefaultLoad := filter.Search == "" && filter.Gender == "" && len(filter.Tags) == 0 &&
+		filter.Country == "" && filter.State == "" && filter.City == "" &&
+		filter.CreatedFrom == "" && filter.CreatedTo == "" &&
+		filter.ActivityFrom == "" && filter.ActivityTo == "" &&
+		(filter.Page <= 1)
+
+	cacheKey := "cache:contacts:dashboard_default"
+
+	if isDefaultLoad {
+		if cachedData, err := config.RedisClient.Get(ctx, cacheKey).Result(); err == nil && cachedData != "" {
+			log.Printf("🚀 [REDIS] CACHE HIT! Returning 200 contacts instantly from memory.")
+			c.Response().Header().Set("X-Cache", "HIT")
+			return c.JSONBlob(http.StatusOK, []byte(cachedData))
+		}
+	}
+
 	contacts, total, err := repository.ListContacts(ctx, filter)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
@@ -61,11 +86,24 @@ func ListContactsHandler(c echo.Context) error {
 		totalPages = int(math.Ceil(float64(total) / float64(limit)))
 	}
 
-	return c.JSON(http.StatusOK, models.ContactListResponse{
+	response := models.ContactListResponse{
 		Data:       contacts,
 		Total:      total,
 		Page:       page,
 		Limit:      limit,
 		TotalPages: totalPages,
-	})
+	}
+
+	
+	// 2. SAVE DASHBOARD TO CACHE
+	if isDefaultLoad {
+		log.Printf("🗄️ [CLICKHOUSE] CACHE MISS! Fetching contacts and saving to Redis...")
+		if responseBytes, err := json.Marshal(response); err == nil {
+			// Save the default dashboard in Redis for 10 seconds
+			config.RedisClient.Set(ctx, cacheKey, responseBytes, 10*time.Second)
+		}
+	}
+
+	c.Response().Header().Set("X-Cache", "MISS")
+	return c.JSON(http.StatusOK, response)
 }
