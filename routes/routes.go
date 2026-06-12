@@ -101,6 +101,9 @@ func RegisterRoutes(e *echo.Echo) {
 			// CSV Import endpoints
 			contacts.POST("/import", handlers.UploadImportFileHandler)
 			contacts.GET("/import/:import_id", handlers.GetImportStatusHandler)
+
+			// For real time updates for the Preogress Bar route 
+			contacts.GET("/ws/import/:id",handlers.ImportProgressWS)
 		}
 	}
 }

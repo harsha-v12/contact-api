@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"time"
@@ -63,6 +64,18 @@ func UpdateImportProgress(ctx context.Context, importID string, processed, succe
 	if err != nil {
 		return fmt.Errorf("failed to update redis import progress: %w", err)
 	}
+
+	// 1. Package the exact same progress into JSON
+	progressJSON, _ := json.Marshal(map[string]interface{}{
+		"import_id":          importID,
+		"processed_records":  processed,
+		"successful_records": successful,
+		"failed_records":     failed,
+		"status":             status,
+	})
+
+	// 2. Broadcast this JSON to a specific Redis channel for this import!
+	config.RedisClient.Publish(ctx, "import_channel:"+importID, progressJSON)
 
 	return nil
 }
