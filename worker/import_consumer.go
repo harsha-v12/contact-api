@@ -87,6 +87,29 @@ func processImportJob(msg models.CSVImportMessage) {
 	successful := 0
 	failed := 0
 
+	var contactsBatch []*models.Contact
+	var activitiesBatch []*models.ContactActivity
+
+	flushBatch := func() {
+		if len(contactsBatch) == 0 {
+			return
+		}
+		err := repository.BatchInsertContacts(ctx, contactsBatch)
+		if err != nil {
+			log.Printf("[Worker] BatchInsertContacts error: %v", err)
+			failed += len(contactsBatch)
+		} else {
+			successful += len(contactsBatch)
+			_ = repository.BatchAddContactActivities(ctx, activitiesBatch)
+		}
+		
+		// same bucket used and clearing for the next batch without any creating the batch
+		contactsBatch = contactsBatch[:0]
+		activitiesBatch = activitiesBatch[:0]
+		
+		services.UpdateImportProgress(ctx, msg.ImportID, processed, successful, failed, "processing")
+	}
+
 	for i, row := range records {
 		if i == 0 {
 			continue // Skip header
@@ -167,7 +190,6 @@ func processImportJob(msg models.CSVImportMessage) {
 			}
 			contact.Tags = tags
 		}
-
 		isDuplicate, err := repository.CheckDuplicate(ctx, contact.Email, contact.MobileNumber, nil)
 		if isDuplicate {
 			log.Printf("[Worker] Skipping row %d: Duplicate email/mobile", i)
@@ -178,25 +200,22 @@ func processImportJob(msg models.CSVImportMessage) {
 			log.Printf("[Worker] CheckDuplicate error on row %d: %v", i, err)
 		}
 
-		err = repository.CreateContact(ctx, &contact)
-		if err != nil {
-			log.Printf("[Worker] CreateContact error on row %d: %v", i, err)
-			failed++
-		} else {
-			successful++
-			_ = repository.AddContactActivity(ctx, &models.ContactActivity{
-				ID:           uuid.New(),
-				ContactID:    contact.ID,
-				ActivityType: "contact_created",
-				Details:      "Contact record created via CSV Import",
-				CreatedAt:    time.Now(),
-			})
-		}
+		contactsBatch = append(contactsBatch, &contact)
+		activitiesBatch = append(activitiesBatch, &models.ContactActivity{
+			ID:           uuid.New(),
+			ContactID:    contact.ID,
+			ActivityType: "contact_created",
+			Details:      "Contact record created via CSV Import",
+			CreatedAt:    time.Now(),
+		})
 
-		if processed%100 == 0 {
-			services.UpdateImportProgress(ctx, msg.ImportID, processed, successful, failed, "processing")
+		if len(contactsBatch) >= 1000 {
+			flushBatch()
 		}
 	}
+
+	// Flush any remaining contacts in the batch
+	flushBatch()
 
 	services.UpdateImportProgress(ctx, msg.ImportID, processed, successful, failed, "completed")
 	

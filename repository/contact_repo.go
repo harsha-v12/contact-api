@@ -77,6 +77,35 @@ func CreateContact(ctx context.Context, c *models.Contact) error {
 	return nil
 }
 
+// BatchInsertContacts inserts multiple contact records efficiently
+func BatchInsertContacts(ctx context.Context, contacts []*models.Contact) error {
+	if len(contacts) == 0 {
+		return nil
+	}
+
+	batch, err := config.DB.PrepareBatch(ctx, "INSERT INTO contacts")
+	if err != nil {
+		return fmt.Errorf("failed to prepare batch for contacts: %w", err)
+	}
+
+	for _, c := range contacts {
+		err := batch.Append(
+			c.ID, c.FirstName, c.LastName, c.Email, c.MobileNumber, c.Gender,
+			c.DateOfBirth, c.City, c.State, c.Country, c.Tags, c.Notes,
+			c.CreatedAt, c.LastActivityAt, c.IsDeleted, c.Version,
+		)
+		if err != nil {
+			return fmt.Errorf("failed to append contact to batch: %w", err)
+		}
+	}
+
+	if err := batch.Send(); err != nil {
+		return fmt.Errorf("failed to send contacts batch: %w", err)
+	}
+
+	return nil
+}
+
 // Given a Contact ID
 //         ↓
 // Fetch that contact from ClickHouse
@@ -232,6 +261,31 @@ func AddContactActivity(ctx context.Context, a *models.ContactActivity) error {
 	if err != nil {
 		return fmt.Errorf("failed to log contact activity: %w", err)
 	}
+	return nil
+}
+
+// BatchAddContactActivities logs multiple activity events efficiently
+func BatchAddContactActivities(ctx context.Context, activities []*models.ContactActivity) error {
+	if len(activities) == 0 {
+		return nil
+	}
+
+	batch, err := config.DB.PrepareBatch(ctx, "INSERT INTO contact_activities")
+	if err != nil {
+		return fmt.Errorf("failed to prepare batch for activities: %w", err)
+	}
+
+	for _, a := range activities {
+		err := batch.Append(a.ID, a.ContactID, a.ActivityType, a.Details, a.CreatedAt)
+		if err != nil {
+			return fmt.Errorf("failed to append activity to batch: %w", err)
+		}
+	}
+
+	if err := batch.Send(); err != nil {
+		return fmt.Errorf("failed to send activities batch: %w", err)
+	}
+
 	return nil
 }
 
