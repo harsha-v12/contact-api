@@ -57,6 +57,32 @@ func CheckDuplicate(ctx context.Context, email, mobileNumber string, excludeID *
 	return count > 0, nil
 }
 
+// GetExistingIdentifiers returns a map of all existing emails and mobile numbers
+func GetExistingIdentifiers(ctx context.Context) (map[string]bool, error) {
+	existing := make(map[string]bool)
+	
+	query := `SELECT email, mobile_number FROM contacts FINAL WHERE is_deleted = 0`
+	rows, err := config.DB.Query(ctx, query)
+	if err != nil {
+		return existing, fmt.Errorf("failed to fetch existing identifiers: %w", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var email, mobile string
+		if err := rows.Scan(&email, &mobile); err != nil {
+			continue
+		}
+		if email != "" {
+			existing[email] = true
+		}
+		if mobile != "" {
+			existing[mobile] = true
+		}
+	}
+	return existing, nil
+}
+
 // CreateContact inserts a contact record
 func CreateContact(ctx context.Context, c *models.Contact) error {
 	query := `

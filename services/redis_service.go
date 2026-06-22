@@ -65,9 +65,14 @@ func UpdateImportProgress(ctx context.Context, importID string, processed, succe
 		return fmt.Errorf("failed to update redis import progress: %w", err)
 	}
 
+	// Fetch total_records so the frontend can calculate percentage!
+	totalStr, _ := config.RedisClient.HGet(ctx, key, "total_records").Result()
+	totalRecords, _ := strconv.Atoi(totalStr)
+
 	// 1. Package the exact same progress into JSON
 	progressJSON, _ := json.Marshal(map[string]interface{}{
 		"import_id":          importID,
+		"total_records":      totalRecords,
 		"processed_records":  processed,
 		"successful_records": successful,
 		"failed_records":     failed,

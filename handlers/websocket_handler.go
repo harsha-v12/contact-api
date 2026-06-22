@@ -20,6 +20,7 @@ var upgrader = websocket.Upgrader{
 }
 func ImportProgressWS(c echo.Context)error{
 	importID:=c.Param("id")
+    println("WEBSOCKET HIT:", importID)
 
 	// 1. Upgrade the standard HTTP request to a WebSocket connection
 	ws,err:=upgrader.Upgrade(c.Response(),c.Request(),nil)

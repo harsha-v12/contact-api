@@ -83,6 +83,15 @@ func processImportJob(msg models.CSVImportMessage) {
 		return
 	}
 
+	log.Printf("[Worker] Successfully opened CSV. Total lines: %d. Downloading Database Cache...", len(records))
+
+	existingIdentifiers, err := repository.GetExistingIdentifiers(ctx)
+	if err != nil {
+		log.Printf("[Worker] Warning: Failed to load existing identifiers: %v", err)
+		// Fallback to empty map if cache fails, or we could fail the import
+	}
+	log.Printf("[Worker] Cached %d unique identifiers from ClickHouse. Starting lightning fast loop...", len(existingIdentifiers))
+
 	processed := 0
 	successful := 0
 	failed := 0
@@ -106,17 +115,13 @@ func processImportJob(msg models.CSVImportMessage) {
 		// same bucket used and clearing for the next batch without any creating the batch
 		contactsBatch = contactsBatch[:0]
 		activitiesBatch = activitiesBatch[:0]
-		
-		services.UpdateImportProgress(ctx, msg.ImportID, processed, successful, failed, "processing")
 	}
 
 	for i, row := range records {
 		if i == 0 {
 			continue // Skip header
 		}
-
 		processed++
-
 		if len(row) < 4 {
 			failed++
 			continue
@@ -190,14 +195,27 @@ func processImportJob(msg models.CSVImportMessage) {
 			}
 			contact.Tags = tags
 		}
-		isDuplicate, err := repository.CheckDuplicate(ctx, contact.Email, contact.MobileNumber, nil)
+		// Lightning Fast RAM Memory Lookup!
+		isDuplicate := false
+		if contact.Email != "" && existingIdentifiers[contact.Email] {
+			isDuplicate = true
+		}
+		if contact.MobileNumber != "" && existingIdentifiers[contact.MobileNumber] {
+			isDuplicate = true
+		}
+
 		if isDuplicate {
-			log.Printf("[Worker] Skipping row %d: Duplicate email/mobile", i)
+			// Do not log every duplicate to avoid spamming the terminal, but increment failed
 			failed++
 			continue
 		}
-		if err != nil {
-			log.Printf("[Worker] CheckDuplicate error on row %d: %v", i, err)
+
+		// Add new contacts to our RAM cache so we don't allow duplicates within the same CSV file!
+		if contact.Email != "" {
+			existingIdentifiers[contact.Email] = true
+		}
+		if contact.MobileNumber != "" {
+			existingIdentifiers[contact.MobileNumber] = true
 		}
 
 		contactsBatch = append(contactsBatch, &contact)
@@ -211,6 +229,12 @@ func processImportJob(msg models.CSVImportMessage) {
 
 		if len(contactsBatch) >= 1000 {
 			flushBatch()
+		}
+
+		// Update progress bar strictly every 100 rows!
+		if processed%100 == 0 {
+			log.Printf("[Worker] Milestone Reached: Processed %d records. Broadcasting to WebSocket...", processed)
+			services.UpdateImportProgress(ctx, msg.ImportID, processed, successful, failed, "processing")
 		}
 	}
 
