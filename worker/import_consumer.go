@@ -93,7 +93,7 @@ func processImportJob(msg models.CSVImportMessage) {
 	flushBatch := func() {
 		if len(contactsBatch) == 0 {
 			return
-		}
+		}	
 		err := repository.BatchInsertContacts(ctx, contactsBatch)
 		if err != nil {
 			log.Printf("[Worker] BatchInsertContacts error: %v", err)

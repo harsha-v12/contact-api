@@ -17,8 +17,8 @@ var tagsList = []string{"VIP", "Customer", "Lead"}
 
 func main() {
 	rand.Seed(time.Now().UnixNano())
-	generateCSV("demo_set_1.csv", 1000000, 150)
-	generateCSV("demo_set_2.csv", 2000000, 150)
+	generateCSV("demo_set_1.csv", 1000000, 15000)
+	generateCSV("demo_set_2.csv", 2000000, 15000)
 	fmt.Println("Successfully generated demo_set_1.csv and demo_set_2.csv!")
 }
 
