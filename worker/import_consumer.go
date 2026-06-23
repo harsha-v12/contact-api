@@ -15,6 +15,8 @@ import (
 	"contact-management/repository"
 	"contact-management/services"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/google/uuid"
 	"github.com/segmentio/kafka-go"
 )
@@ -64,14 +66,33 @@ func processImportJob(msg models.CSVImportMessage) {
 	ctx := context.Background()
 	services.UpdateImportProgress(ctx, msg.ImportID, 0, 0, 0, "processing")
 
-	f, err := os.Open(msg.FilePath)
-	if err != nil {
+	// Parse S3 URI (e.g. s3://bucket/uploads/uuid.csv)
+	var bucket, key string
+	if strings.HasPrefix(msg.FilePath, "s3://") {
+		parts := strings.SplitN(strings.TrimPrefix(msg.FilePath, "s3://"), "/", 2)
+		if len(parts) == 2 {
+			bucket = parts[0]
+			key = parts[1]
+		}
+	} else {
+		// Fallback for local testing if needed
+		log.Printf("[Worker] Invalid S3 URI format: %s", msg.FilePath)
 		services.UpdateImportProgress(ctx, msg.ImportID, 0, 0, 0, "failed")
 		return
 	}
-	defer f.Close()
 
-	reader := csv.NewReader(f)
+	out, err := config.S3Client.GetObject(ctx, &s3.GetObjectInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(key),
+	})
+	if err != nil {
+		log.Printf("[Worker] Failed to download from S3: %v", err)
+		services.UpdateImportProgress(ctx, msg.ImportID, 0, 0, 0, "failed")
+		return
+	}
+	defer out.Body.Close()
+
+	reader := csv.NewReader(out.Body)
 	reader.FieldsPerRecord = -1 // Allow variable number of fields per row
 	reader.LazyQuotes = true    // Be forgiving with quotes
 	records, err := reader.ReadAll()
@@ -243,8 +264,17 @@ func processImportJob(msg models.CSVImportMessage) {
 	// Flush any remaining contacts in the batch
 	flushBatch()
 
+	// Cleanup: Delete the file from S3 to save storage costs!
+	_, err = config.S3Client.DeleteObject(ctx, &s3.DeleteObjectInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(key),
+	})
+	if err != nil {
+		log.Printf("[Worker] Warning: Failed to delete file from S3: %v", err)
+	} else {
+		log.Printf("[Worker] Successfully deleted %s from S3 to save storage costs.", msg.FilePath)
+	}
+
 	services.UpdateImportProgress(ctx, msg.ImportID, processed, successful, failed, "completed")
-	
-	// Clean up temporary file
-	os.Remove(msg.FilePath)
+	log.Printf("[Worker] Finished Import %s. Total: %d, Success: %d, Failed: %d\n", msg.ImportID, processed, successful, failed)
 }

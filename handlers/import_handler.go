@@ -15,6 +15,8 @@ import (
 	"contact-management/models"
 	"contact-management/services"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/segmentio/kafka-go"
@@ -52,39 +54,42 @@ func UploadImportFileHandler(c echo.Context) error {
 	}
 
 	importID := uuid.New().String()
-	uploadDir := "./uploads"
-	os.MkdirAll(uploadDir, os.ModePerm)
-	
-	filePath := filepath.Join(uploadDir, fmt.Sprintf("%s.csv", importID))
-	
-	// Save the file
+	objectKey := fmt.Sprintf("uploads/%s.csv", importID)
+
 	src, err := file.Open()
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": "failed to open uploaded file"})
 	}
 	defer src.Close()
 
-	dst, err := os.Create(filePath)
+	// Count rows in memory before uploading
+	totalRecords, err := countCSVRowsFromStream(src)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": "failed to create target file"})
-	}
-	defer dst.Close()
-
-	if _, err = io.Copy(dst, src); err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": "failed to save file"})
-	}
-
-	totalRecords, err := countCSVRows(filePath)
-	if err != nil {
-		os.Remove(filePath)
 		return c.JSON(http.StatusBadRequest, map[string]interface{}{"error": err.Error()})
 	}
 	if totalRecords == 0 {
-		os.Remove(filePath)
 		return c.JSON(http.StatusBadRequest, map[string]interface{}{"error": "invalid or empty CSV file"})
 	}
 
+	// Reset stream to beginning so we can upload it to S3
+	if seeker, ok := src.(io.Seeker); ok {
+		seeker.Seek(0, io.SeekStart)
+	}
+
 	ctx := c.Request().Context()
+
+	// Upload to S3 directly!
+	_, err = config.S3Client.PutObject(ctx, &s3.PutObjectInput{
+		Bucket: aws.String(config.S3BucketName),
+		Key:    aws.String(objectKey),
+		Body:   src,
+	})
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": fmt.Sprintf("failed to upload to S3: %v", err)})
+	}
+
+	filePath := fmt.Sprintf("s3://%s/%s", config.S3BucketName, objectKey)
+
 	err = services.CreateImportJob(ctx, importID, totalRecords)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": "failed to initialize import tracking"})
@@ -94,9 +99,9 @@ func UploadImportFileHandler(c echo.Context) error {
 		ImportID: importID,
 		FilePath: filePath,
 	}
-	
+
 	msgBytes, _ := json.Marshal(msg)
-	
+
 	err = config.KafkaWriter.WriteMessages(ctx, kafka.Message{
 		Key:   []byte(importID),
 		Value: msgBytes,
@@ -114,14 +119,9 @@ func UploadImportFileHandler(c echo.Context) error {
 	})
 }
 
-func countCSVRows(filePath string) (int, error) {
-	f, err := os.Open(filePath)
-	if err != nil {
-		return 0, err
-	}
-	defer f.Close()
+func countCSVRowsFromStream(r io.Reader) (int, error) {
 
-	reader := csv.NewReader(f)
+	reader := csv.NewReader(r)
 	reader.FieldsPerRecord = -1 // Allow variable number of fields per row
 	reader.LazyQuotes = true    // Be forgiving with quotes
 	records, err := reader.ReadAll()
@@ -159,7 +159,7 @@ func countCSVRows(filePath string) (int, error) {
 // @Router /contacts/import/{import_id} [get]
 func GetImportStatusHandler(c echo.Context) error {
 	importID := c.Param("import_id")
-	
+
 	job, err := services.GetImportJob(c.Request().Context(), importID)
 	if err != nil {
 		return c.JSON(http.StatusNotFound, map[string]interface{}{"error": "import job not found"})
@@ -183,10 +183,7 @@ func GetImportStatusHandler(c echo.Context) error {
 	})
 }
 
-
-
-
-// flow of the structure import the status 
+// flow of the structure import the status
 // flow structure of the import csv file
 
 // User uploads CSV

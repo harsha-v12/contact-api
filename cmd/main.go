@@ -39,9 +39,10 @@ func main() {
 	config.CreateTables()
 	config.ConnectRedis()
 	config.ConnectKafka()
+	config.ConnectS3()
 	defer config.CloseKafka()
 
-	// 3. Start background Kafka consumer for CSV imports infinitely if any topic exits in kafka then consumer takes the topic and process the data 
+	// 3. Start background Kafka consumer for CSV imports infinitely if any topic exits in kafka then consumer takes the topic and process the data
 	go worker.StartImportConsumer()
 
 	// 4. Setup Echo router
@@ -68,7 +69,7 @@ func main() {
 
 	// Register API Routes
 	routes.RegisterRoutes(e)
-	
+
 	log.Printf("Starting HTTP server on port %s... ✅", port)
 	e.Logger.Fatal(e.Start(":" + port))
 }
