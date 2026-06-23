@@ -62,6 +62,29 @@ func CloseKafka() {
 	}
 }
 
+// GetKafkaDialer returns a dialer configured with SASL/TLS for QA/Prod environments
+func GetKafkaDialer() *kafka.Dialer {
+	username := getEnv("KAFKA_USERNAME", "")
+	password := getEnv("KAFKA_PASSWORD", "")
+	secure := getEnv("KAFKA_SECURE", "false")
+
+	dialer := &kafka.Dialer{
+		Timeout:   10 * time.Second,
+		DualStack: true,
+	}
+
+	if username != "" {
+		dialer.SASLMechanism = plain.Mechanism{
+			Username: username,
+			Password: password,
+		}
+		if secure == "true" {
+			dialer.TLS = &tls.Config{}
+		}
+	}
+	return dialer
+}
+
 func createTopicIfNotExists(broker, topic, username, password, secure string) {
 	var conn *kafka.Conn
 	var err error

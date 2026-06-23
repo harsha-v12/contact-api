@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"contact-management/config"
 	"contact-management/models"
 	"contact-management/repository"
 	"contact-management/services"
@@ -37,6 +38,7 @@ func StartImportConsumer() {
 		Topic:    topic,
 		GroupID:  groupID,
 		MaxBytes: 10e6, // 10MB
+		Dialer:   config.GetKafkaDialer(), // The FIX: Apply SASL/TLS authentication to the consumer!
 	})
 
 	fmt.Printf("[ImportConsumer] Listening on topic '%s' (group: %s)\n", topic, groupID)
