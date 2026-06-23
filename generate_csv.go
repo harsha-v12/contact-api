@@ -17,8 +17,12 @@ var tagsList = []string{"VIP", "Customer", "Lead"}
 
 func main() {
 	rand.Seed(time.Now().UnixNano())
+	generateCSV("demo_set_100.csv", 6000000, 100)
+	generateCSV("demo_set_1k.csv", 5000000, 1000)
+	generateCSV("demo_set_50k.csv", 3000000, 50000)
+	generateCSV("demo_set_100k.csv", 4000000, 100000)
 	generateMixedCSV("demo_set_mixed.csv", 490, 10)
-	fmt.Println("Successfully generated demo_set_mixed.csv with exactly 10 invalid rows!")
+	fmt.Println("Successfully generated all demo CSV sets, including demo_set_100.csv!")
 }
 
 func generateCSV(filename string, startPhone, count int) {

@@ -264,17 +264,6 @@ func processImportJob(msg models.CSVImportMessage) {
 	// Flush any remaining contacts in the batch
 	flushBatch()
 
-	// Cleanup: Delete the file from S3 to save storage costs!
-	_, err = config.S3Client.DeleteObject(ctx, &s3.DeleteObjectInput{
-		Bucket: aws.String(bucket),
-		Key:    aws.String(key),
-	})
-	if err != nil {
-		log.Printf("[Worker] Warning: Failed to delete file from S3: %v", err)
-	} else {
-		log.Printf("[Worker] Successfully deleted %s from S3 to save storage costs.", msg.FilePath)
-	}
-
 	services.UpdateImportProgress(ctx, msg.ImportID, processed, successful, failed, "completed")
 	log.Printf("[Worker] Finished Import %s. Total: %d, Success: %d, Failed: %d\n", msg.ImportID, processed, successful, failed)
 }
